@@ -64,7 +64,7 @@
 #   DONE: TODO: bei image viewer die v_max und die h_max separat berechnen und die bilder entsprechend skalieren (damit auch breite bilder bis an den rand gehen)
 #    DONE: TODO: check image orientation in exif and rotate them in the viewer 
 #    DONE: TODO: make the rotate_image method (in Viewer) a "global" function and rotate the images for the imagedisplay area (liwi) too. (get the tags around line 220 and rotate image around line 249 and 282; the images that have been searched are not opened "rb" so i have to get the tags septerately ~at line 453 and rotate at line 455
-#     TODO: use left and right key in viewer to navigate and r and l to rotate the image-> rewrite the rotation routines to accept the rotation and not the tags dict, otherwise i would have to generate a dic in the navigation ... (see class ViewerDialog)
+#     Partiall DONE: TODO: use left and right key in viewer to navigate and r and l to rotate the image-> rewrite the rotation routines to accept the rotation and not the tags dict, otherwise i would have to generate a dic in the navigation ... (see class ViewerDialog); DONE: r and l key rotate image (but no left and right key functionality and no rewrite of rotation routine due to practical reasons
 #     DONE: TODO: automatically append new entered data to the respective comboBoxes (not just after pressing "enter") added a new method "add_cb(self)" at about line 340
 #     DONE: TODO: reset the viewer after clicking "Clear display" (or close it), this should help to avoid that the viewer displays different images than on the image display area; added a call to viewer.close() to ImClear at about line 310
 #     Done: TODO: Sort filenames before loading files into the image view area to preserve chronology as files in digital cameras are named chronologically ascending.
@@ -74,6 +74,7 @@ import datetime
 import codecs
 import hashlib
 import sys
+import atexit
 from PyQt4 import QtGui, QtCore
 #from PyQt4.QtCore import QString as qstr
 #from pysqlite2 import dbapi2 as sqlite3
@@ -732,7 +733,7 @@ class ViewerDialog(QtGui.QDialog):
         
         self.Vui.widget.wheelEvent = self.wheel_event
         self.Vui.widget.resizeEvent=self.resize_event
-        #self.Vui.widget.keyPressEvent=self.key_event
+        self.Vui.widget.keyPressEvent=self.key_event
         
     def set_view(self,Im_file_list):
         self.images=Im_file_list 
@@ -760,18 +761,28 @@ class ViewerDialog(QtGui.QDialog):
         self.zoom(numSteps)
         event.accept()
         
-    #def key_event(self, event):
-      #  key=event.key()   # since i can not figure out how to i commented it (the left or the right cursor do not trigger an event.
-      #  if key == QtCore.Qt.Key_Left:
-      #      print("left")
-      #      self.prev()
-      #      event.accept()
-      #  elif key is QtCore.Qt.Key_Right:
-      #      print("right")
-      #      #self.next()
-      #      event.accept()
-      #  else:
-     #       event.ignore()
+    def key_event(self, event):
+        key=event.key()   # since i can not figure out how to i commented it (the left or the right cursor do not trigger an event. solution: depends on focus policy in qtdesigner ... did not workout, every key except the right and left keys tirggered a keyevent... now switched to use key input to rotate images using lowercase l and r
+      #  print("keypressevent")
+      #  event.accept()
+        tags={}
+        tags['Image Orientation']=fake_Tags()
+        if key == QtCore.Qt.Key_L:
+            tags['Image Orientation'].printable="Rotated 90 CCW"
+            self.l_pix[self.p_pointer]=rotate_image(self.l_pix[self.p_pointer],tags)
+            self.c_view=self.scale_image(self.l_pix[self.p_pointer]) # tags is a dict of objects
+            #self.prev()
+            self.view_current()
+            event.accept()
+        elif key == QtCore.Qt.Key_R:
+            tags['Image Orientation'].printable="Rotated 90 CW"
+            self.l_pix[self.p_pointer]=rotate_image(self.l_pix[self.p_pointer],tags)
+            self.c_view=self.scale_image(self.l_pix[self.p_pointer])
+            #self.next()
+            self.view_current()
+            event.accept()
+        else:
+            event.ignore()
         
     def resize_event(self, event): 
         self.w_vsize = self.view.size().width() 
@@ -923,11 +934,15 @@ class ViewerDialog(QtGui.QDialog):
     def showViewer(self):
         self.show()
         self.raise_()
-        
+
     def close(self):
         self.hide()
     
-    
+# This is an ugly object to be able to use the image rotate function (takes a dict of objects) without modifying much more code. and allow code reuse in other places
+class fake_Tags(object):  
+    def __init__(self):
+        self.printable=""
+
 class ThumbListWidget(QtGui.QListWidget): # class for the display of images (inspired by a post on the PyQt mailing list http://www.riverbankcomputing.com/mailman/listinfo/pyqt by Mads Ipsen-3 Mar 25, 2009; 09:10am)
     def __init__(self, parent=None, palette=None):
         super(ThumbListWidget, self).__init__(parent)
@@ -970,7 +985,7 @@ class ThumbListWidget(QtGui.QListWidget): # class for the display of images (ins
             event.ignore()
 
 class database(object):
-    """Database class: connects to the dbs and has methods for searching ans updating
+    """Database class: connects to the dbs and has methods for searching and updating
     """
     def get_new_cur(self,fileName):
         r=self.get_cur(fileName)
@@ -1333,6 +1348,7 @@ if __name__ == "__main__":
     if not dia_result:
         sys.exit(None)
     myapp.populate_cb()
-    viewer=ViewerDialog()    
+    viewer=ViewerDialog()
+    #atexit.register(viewer.close()) # tried to close a forgotten viewer upon exit of the main window (failed, because sys.exit (wich tirggers this) is only triggered at or after closing of the last window, which in this case would be the viewer therefore there is no viewer anymore when this function triggers ...)
     sys.exit(app.exec_())
     
