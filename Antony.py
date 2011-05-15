@@ -74,7 +74,6 @@ import datetime
 import codecs
 import hashlib
 import sys
-import atexit
 from PyQt4 import QtGui, QtCore
 #from PyQt4.QtCore import QString as qstr
 #from pysqlite2 import dbapi2 as sqlite3
@@ -763,22 +762,18 @@ class ViewerDialog(QtGui.QDialog):
         
     def key_event(self, event):
         key=event.key()   # since i can not figure out how to i commented it (the left or the right cursor do not trigger an event. solution: depends on focus policy in qtdesigner ... did not workout, every key except the right and left keys tirggered a keyevent... now switched to use key input to rotate images using lowercase l and r
-      #  print("keypressevent")
-      #  event.accept()
         tags={}
         tags['Image Orientation']=fake_Tags()
         if key == QtCore.Qt.Key_L:
             tags['Image Orientation'].printable="Rotated 90 CCW"
             self.l_pix[self.p_pointer]=rotate_image(self.l_pix[self.p_pointer],tags)
             self.c_view=self.scale_image(self.l_pix[self.p_pointer]) # tags is a dict of objects
-            #self.prev()
             self.view_current()
             event.accept()
         elif key == QtCore.Qt.Key_R:
             tags['Image Orientation'].printable="Rotated 90 CW"
             self.l_pix[self.p_pointer]=rotate_image(self.l_pix[self.p_pointer],tags)
             self.c_view=self.scale_image(self.l_pix[self.p_pointer])
-            #self.next()
             self.view_current()
             event.accept()
         else:
@@ -1349,6 +1344,6 @@ if __name__ == "__main__":
         sys.exit(None)
     myapp.populate_cb()
     viewer=ViewerDialog()
-    #atexit.register(viewer.close()) # tried to close a forgotten viewer upon exit of the main window (failed, because sys.exit (wich tirggers this) is only triggered at or after closing of the last window, which in this case would be the viewer therefore there is no viewer anymore when this function triggers ...)
+    #atexit.register(viewer.close()) # tried to close a forgotten viewer upon exit of the main window (failed, because sys.exit (wich tirggers this) is only triggered at or after closing of the last window, which in this case would be the viewer therefore there is no viewer anymore when this function triggers ...) if try again do not forget to import atexit
     sys.exit(app.exec_())
     
