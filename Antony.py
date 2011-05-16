@@ -68,6 +68,7 @@
 #     DONE: TODO: automatically append new entered data to the respective comboBoxes (not just after pressing "enter") added a new method "add_cb(self)" at about line 340
 #     DONE: TODO: reset the viewer after clicking "Clear display" (or close it), this should help to avoid that the viewer displays different images than on the image display area; added a call to viewer.close() to ImClear at about line 310
 #     Done: TODO: Sort filenames before loading files into the image view area to preserve chronology as files in digital cameras are named chronologically ascending.
+#	ADDED: closeEvent to StartGui to be able to do someting when the mainwindow is closed (e.g. close the viewer)
 
 import locale
 import datetime
@@ -190,6 +191,10 @@ class StartGui (QtGui.QMainWindow):
         self.connect(self.ui.ExportAll_button, QtCore.SIGNAL("clicked()"), self.export_allImages)
         self.connect(self.ui.dbSync_pushButton, QtCore.SIGNAL("clicked()"), self.db_sync)
         self.connect(self.liwi, QtCore.SIGNAL("dropped"), self.load_Images)
+        
+    def closeEvent(self,event): # close the viewer too if the main window is closed
+        viewer.close()
+        event.accept()
     
     def double_click_detect(self): # if no double click then the timer will emmit the timeout() signal and call the single click action (update_export_decide())
         if not self.timer.isActive():
@@ -1344,6 +1349,5 @@ if __name__ == "__main__":
         sys.exit(None)
     myapp.populate_cb()
     viewer=ViewerDialog()
-    #atexit.register(viewer.close()) # tried to close a forgotten viewer upon exit of the main window (failed, because sys.exit (wich tirggers this) is only triggered at or after closing of the last window, which in this case would be the viewer therefore there is no viewer anymore when this function triggers ...) if try again do not forget to import atexit
     sys.exit(app.exec_())
     
