@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="de_DE">
+<!DOCTYPE TS><TS version="1.1" language="de_DE">
 <context>
     <name>Dialog</name>
     <message>
@@ -24,22 +23,22 @@
         <translation>Bestehende DB auswählen</translation>
     </message>
     <message>
-        <location filename="ViewerUI.py" line="68"/>
+        <location filename="ViewerUI.py" line="100"/>
         <source>Antony Viewer</source>
         <translation>Antony Viewer</translation>
     </message>
     <message>
-        <location filename="ViewerUI.py" line="69"/>
+        <location filename="ViewerUI.py" line="101"/>
         <source>Prev.</source>
         <translation>Zurück</translation>
     </message>
     <message>
-        <location filename="ViewerUI.py" line="70"/>
+        <location filename="ViewerUI.py" line="102"/>
         <source>Next</source>
         <translation>Vor</translation>
     </message>
     <message>
-        <location filename="ViewerUI.py" line="71"/>
+        <location filename="ViewerUI.py" line="103"/>
         <source>Close</source>
         <translation>Schließen</translation>
     </message>
@@ -150,27 +149,27 @@
 <context>
     <name>StartDialog</name>
     <message>
-        <location filename="Antony.py" line="610"/>
+        <location filename="Antony.py" line="664"/>
         <source>Save database as</source>
         <translation>Datenbank speichern als</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="639"/>
+        <location filename="Antony.py" line="693"/>
         <source>Database (*.sqlite)</source>
         <translation>Datenbanken (*.sqlite)</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="636"/>
+        <location filename="Antony.py" line="690"/>
         <source>New database created: Ready</source>
         <translation>Neue Datenbank erstellt: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="639"/>
+        <location filename="Antony.py" line="693"/>
         <source>Open database</source>
         <translation>Datenbank Öffnen</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="655"/>
+        <location filename="Antony.py" line="709"/>
         <source>Database loaded: Ready</source>
         <translation>Datenbank geladen: Bereit</translation>
     </message>
@@ -178,102 +177,102 @@
 <context>
     <name>StartGui</name>
     <message>
-        <location filename="Antony.py" line="206"/>
+        <location filename="Antony.py" line="231"/>
         <source>Load Image(s)</source>
         <translation>Bild(er) laden</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="206"/>
+        <location filename="Antony.py" line="231"/>
         <source>Image files (*.png *.jpg *.bmp *.tif)</source>
         <translation>Bild Dateien (*.png *.jpg *.bmp *.tif)</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="241"/>
+        <location filename="Antony.py" line="269"/>
         <source>Insert, copy and display new picture</source>
         <translation>Neues Bild eintragen, kopieren und anzeigen</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="254"/>
+        <location filename="Antony.py" line="281"/>
         <source>Picture already in database, loading to display</source>
         <translation>Bild bereits in Datenbank, Vorbereiten der Anzeige</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="283"/>
+        <location filename="Antony.py" line="309"/>
         <source>New pictures loaded: Ready</source>
         <translation>Laden der neuen Bilder fertig: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="289"/>
+        <location filename="Antony.py" line="316"/>
         <source>Tabula rasa: Ready</source>
         <translation>Tabula rasa: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="328"/>
+        <location filename="Antony.py" line="373"/>
         <source>Recording data for all displayed pictures to database</source>
         <translation>Daten werden für alle angezeigten Bilder eingetragen</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="332"/>
+        <location filename="Antony.py" line="378"/>
         <source>All data recorded: Ready</source>
         <translation>Alles eingetragen: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="338"/>
+        <location filename="Antony.py" line="385"/>
         <source>Recorded data for single picuture: Ready</source>
         <translation>Daten für einzelnes Bild zugewiesen: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="372"/>
+        <location filename="Antony.py" line="419"/>
         <source>Export Folder</source>
         <translation>Export Ordner</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="367"/>
+        <location filename="Antony.py" line="414"/>
         <source>Exporting finished: Ready</source>
         <translation>Export fertig: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="380"/>
+        <location filename="Antony.py" line="427"/>
         <source>Export failed: Ready</source>
         <translation>Export fehlgeschlagen: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="378"/>
+        <location filename="Antony.py" line="425"/>
         <source>Export finished: Ready</source>
         <translation>Export fertig: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="405"/>
+        <location filename="Antony.py" line="452"/>
         <source>Searching database</source>
         <translation>Datenbank wird durchsucht</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="424"/>
+        <location filename="Antony.py" line="471"/>
         <source>Your search parameters did not fit for any picture in the database</source>
         <translation>Leider konnte zu deiner Suchanfrage kein passendes Bild gefunden werden</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="457"/>
+        <location filename="Antony.py" line="511"/>
         <source>Search finished: Ready</source>
         <translation>Suche abgeschlossen: Bereit</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="462"/>
+        <location filename="Antony.py" line="516"/>
         <source>Open database</source>
         <translation>Datenbank Öffnen</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="462"/>
+        <location filename="Antony.py" line="516"/>
         <source>Database (*.sqlite)</source>
         <translation>Datenbanken (*.sqlite)</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="465"/>
+        <location filename="Antony.py" line="519"/>
         <source>Selected database and current database are identical, select another one.</source>
         <translation>Diese Datenbank ist bereits geladen, wählen Sie eine andere aus.</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="587"/>
+        <location filename="Antony.py" line="641"/>
         <source> data records to be added or updated</source>
         <translation> Datensätze werden aktualisiert oder hinzugefügt</translation>
     </message>
@@ -281,7 +280,7 @@
 <context>
     <name>ThumbListWidget</name>
     <message>
-        <location filename="Antony.py" line="892"/>
+        <location filename="Antony.py" line="983"/>
         <source>No file in your drop has been identified as image file: Ready</source>
         <translation>Keine Bilddateien in ihrer hereingezogenen Auswahl gefunden: Bereit</translation>
     </message>
@@ -289,31 +288,31 @@
 <context>
     <name>tooltip</name>
     <message>
-        <location filename="Antony.py" line="1169"/>
+        <location filename="Antony.py" line="1261"/>
         <source>&lt;br&gt;&lt;i&gt;Year: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Jahr: &lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="1173"/>
+        <location filename="Antony.py" line="1265"/>
         <source>&lt;br&gt;&lt;i&gt;Event: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Ereignis: &lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="1177"/>
+        <location filename="Antony.py" line="1269"/>
         <source>&lt;br&gt;&lt;i&gt;Photographer: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Fotograf: &lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="1185"/>
+        <location filename="Antony.py" line="1277"/>
         <source>&lt;br&gt;&lt;i&gt;Whos who?: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Wer ists?: &lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="1200"/>
+        <location filename="Antony.py" line="1292"/>
         <source>&lt;br&gt;&lt;i&gt;Comment: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Kommentar: &lt;/i&gt;</translation>
