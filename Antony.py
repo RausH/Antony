@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ##############################################################################
-#    Copyright (C) 2009, 2010 Reinhard Fritsch
+#    Copyright (C) 2009, 2010, 2011 Reinhard Fritsch
 #    Copyright (C) 2010 Marc Fahrner et al. (French translation)
 #
 #    This program is free software; you can redistribute it and/or modify
@@ -22,8 +22,8 @@
 
 # For License and Copyright of EXIF.py please refer to the header in the EXIF.py file
 
-# This is going to be the 17th release candidate of the Kronstorf Scout Image DB it 
-# it is based on Antony.py RC16
+# This is going to be the 18th release candidate of the Kronstorf Scout Image DB it 
+# it is based on Antony.py RC17
 # It aims to provide a means to associate metadata to images (year, event, 
 # photographer, people on the image and some comments). Most importantly 
 # it enables a rather small group of people who can meet physically to share and
@@ -782,7 +782,7 @@ class ViewerDialog(QtGui.QDialog):
             self.view_current()
             event.accept()
         else:
-            event.ignore()
+	    event.ignore()
         
     def resize_event(self, event): 
         self.w_vsize = self.view.size().width() 
