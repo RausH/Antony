@@ -782,7 +782,7 @@ class ViewerDialog(QtGui.QDialog):
             self.view_current()
             event.accept()
         else:
-	    event.ignore()
+            event.ignore()
         
     def resize_event(self, event): 
         self.w_vsize = self.view.size().width() 

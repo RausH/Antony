@@ -1,1 +1,8 @@
 <!-- README für Antony, einfacher text oder markdown-->
+Antony, store and find images
+
+Antony is an offline tool for managing images and storing metadata in an sqlite database. It has been developed with a co-localized group of people in mind. They should be enabled to synchronize their databases using external hard disks. So they can work cooperatively on one database. Might be that using ftp this functionality can be ported to an internet based workflow.
+
+Installation:
+
+Make sure you have Python and PyQt4 installed on the target system. Then you can switch to an Rc_ labeled branch download those files and copy them to a local directory. The program is started by executing Antony.py.
