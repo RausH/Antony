@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="1.1" language="fr_FR">
+<!DOCTYPE TS><TS version="2.0" language="fr_FR" sourcelanguage="">
 <context>
     <name>Dialog</name>
     <message>
@@ -25,146 +25,161 @@
     <message>
         <location filename="ViewerUI.py" line="100"/>
         <source>Antony Viewer</source>
-        <translation>Antony Visualiseur</translation>
+        <translation type="obsolete">Antony Visualiseur</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="101"/>
         <source>Prev.</source>
-        <translation>Retourner</translation>
+        <translation type="obsolete">Retourner</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="102"/>
         <source>Next</source>
-        <translation>Continuer</translation>
+        <translation type="obsolete">Continuer</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="103"/>
         <source>Close</source>
-        <translation>Fermer</translation>
+        <translation type="obsolete">Fermer</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="FotoDB.py" line="297"/>
+        <location filename="FotoDB.py" line="21"/>
         <source>Antony</source>
         <translation>Antony</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="298"/>
+        <location filename="FotoDB.py" line="41"/>
         <source>Load image(s)</source>
         <translation>Chargez l&apos;image ou les images</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="299"/>
+        <location filename="FotoDB.py" line="50"/>
         <source>Clear display</source>
         <translation>Effacez l&apos;affichage</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="300"/>
+        <location filename="FotoDB.py" line="64"/>
         <source>Year:</source>
         <translation>Année:</translation>
     </message>
     <message>
         <location filename="FotoDB.py" line="301"/>
         <source>Event:</source>
-        <translation>Évènement:</translation>
+        <translation type="obsolete">Évènement:</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="302"/>
+        <location filename="FotoDB.py" line="133"/>
         <source>Nick; First; Family name                 </source>
         <translation>Surnom; Prénom; Nom de famille</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="303"/>
+        <location filename="FotoDB.py" line="141"/>
         <source>Photographer:</source>
         <translation>Photographe:</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="304"/>
+        <location filename="FotoDB.py" line="160"/>
         <source>People:</source>
         <translation>Personnes:</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="305"/>
+        <location filename="FotoDB.py" line="187"/>
         <source>Remove</source>
         <translation>Supprimer</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="306"/>
+        <location filename="FotoDB.py" line="196"/>
         <source>Remove all</source>
         <translation>Supprimer tout</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="307"/>
+        <location filename="FotoDB.py" line="219"/>
         <source>Comment:</source>
         <translation>Commentaire:</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="308"/>
+        <location filename="FotoDB.py" line="246"/>
         <source>Search</source>
         <translation>Cherchez</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="309"/>
+        <location filename="FotoDB.py" line="255"/>
         <source>Record for all</source>
         <translation>Enregistrez tout</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="310"/>
+        <location filename="FotoDB.py" line="264"/>
         <source>Export all</source>
         <translation>Exporter tout</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="311"/>
+        <location filename="FotoDB.py" line="271"/>
         <source>Clicking on single images results in:</source>
         <translation>Cliquer une fois sur les résultats d&apos;images:</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="312"/>
+        <location filename="FotoDB.py" line="278"/>
         <source>Record to db</source>
         <translation>Enregistrez vers la DB</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="313"/>
+        <location filename="FotoDB.py" line="283"/>
         <source>Export</source>
         <translation>Exportez</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="314"/>
+        <location filename="FotoDB.py" line="299"/>
         <source>Database operations:</source>
         <translation>Applications de base de données:</translation>
     </message>
     <message>
-        <location filename="FotoDB.py" line="315"/>
+        <location filename="FotoDB.py" line="308"/>
         <source>Synchronize 2 databases</source>
         <translation>Synchronisez 2 bases de données</translation>
+    </message>
+    <message>
+        <location filename="FotoDB.py" line="85"/>
+        <source>Event name:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="FotoDB.py" line="102"/>
+        <source>Location:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="FotoDB.py" line="113"/>
+        <source>Event Type:</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>StartDialog</name>
     <message>
-        <location filename="Antony.py" line="664"/>
+        <location filename="Antony.py" line="709"/>
         <source>Save database as</source>
         <translation>Enregistrez sous</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="693"/>
+        <location filename="Antony.py" line="738"/>
         <source>Database (*.sqlite)</source>
         <translation>Base de données (*.sqlite)</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="690"/>
+        <location filename="Antony.py" line="735"/>
         <source>New database created: Ready</source>
         <translation>Nouvelle base de données créée: Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="693"/>
+        <location filename="Antony.py" line="738"/>
         <source>Open database</source>
         <translation>Ouvrez la base de données</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="709"/>
+        <location filename="Antony.py" line="754"/>
         <source>Database loaded: Ready</source>
         <translation>Base de données chargée: Prêt</translation>
     </message>
@@ -192,82 +207,82 @@
         <translation>Image déjà dans la base de données, chargement pour afficher</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="309"/>
+        <location filename="Antony.py" line="311"/>
         <source>New pictures loaded: Ready</source>
         <translation>Nouvelles images chargées: Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="316"/>
+        <location filename="Antony.py" line="318"/>
         <source>Tabula rasa: Ready</source>
         <translation>Tabula rasa: Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="373"/>
+        <location filename="Antony.py" line="398"/>
         <source>Recording data for all displayed pictures to database</source>
         <translation>Enregistrement des données pour toutes les images affichées vers la base de données</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="378"/>
+        <location filename="Antony.py" line="403"/>
         <source>All data recorded: Ready</source>
         <translation>Toutes les données sont enregistrées: Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="385"/>
+        <location filename="Antony.py" line="410"/>
         <source>Recorded data for single picuture: Ready</source>
         <translation>Données enregistrées pour une image unique: Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="419"/>
+        <location filename="Antony.py" line="446"/>
         <source>Export Folder</source>
         <translation>Exportez le dossier</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="414"/>
+        <location filename="Antony.py" line="441"/>
         <source>Exporting finished: Ready</source>
         <translation>Fin de l&apos;export: Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="427"/>
+        <location filename="Antony.py" line="454"/>
         <source>Export failed: Ready</source>
         <translation>Echec de l&apos;export:Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="425"/>
+        <location filename="Antony.py" line="452"/>
         <source>Export finished: Ready</source>
         <translation>Fin de l&apos;export: Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="452"/>
+        <location filename="Antony.py" line="479"/>
         <source>Searching database</source>
         <translation>Recherche de la base de données</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="471"/>
+        <location filename="Antony.py" line="502"/>
         <source>Your search parameters did not fit for any picture in the database</source>
         <translation>Vos paramètres de recherche n&apos;étaient adaptés pour aucune image de la base de données</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="511"/>
+        <location filename="Antony.py" line="544"/>
         <source>Search finished: Ready</source>
         <translation>Fin de la recherche: Prêt</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="516"/>
+        <location filename="Antony.py" line="549"/>
         <source>Open database</source>
         <translation>Ouvrez la base de données</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="516"/>
+        <location filename="Antony.py" line="549"/>
         <source>Database (*.sqlite)</source>
         <translation>Base de données (*.sqlite)</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="519"/>
+        <location filename="Antony.py" line="552"/>
         <source>Selected database and current database are identical, select another one.</source>
         <translation>La base de données choisie et la base de données actuelle sont identiques, choisissez-en une autre.</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="641"/>
+        <location filename="Antony.py" line="686"/>
         <source> data records to be added or updated</source>
         <translation>Données d&apos;enregistrement pour être ajoutées ou mises à jour</translation>
     </message>
@@ -275,7 +290,7 @@
 <context>
     <name>ThumbListWidget</name>
     <message>
-        <location filename="Antony.py" line="983"/>
+        <location filename="Antony.py" line="1028"/>
         <source>No file in your drop has been identified as image file: Ready</source>
         <translation>Aucun fichier de votre choix n&apos;a été identifié comme fichier image: Prêt</translation>
     </message>
@@ -283,34 +298,46 @@
 <context>
     <name>tooltip</name>
     <message>
-        <location filename="Antony.py" line="1261"/>
+        <location filename="Antony.py" line="1332"/>
         <source>&lt;br&gt;&lt;i&gt;Year: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Année: &lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="1265"/>
+        <location filename="Antony.py" line="1368"/>
         <source>&lt;br&gt;&lt;i&gt;Event: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Évènement: &lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="1269"/>
+        <location filename="Antony.py" line="1376"/>
         <source>&lt;br&gt;&lt;i&gt;Photographer: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Photographe: &lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="1277"/>
+        <location filename="Antony.py" line="1384"/>
         <source>&lt;br&gt;&lt;i&gt;Whos who?: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Qui est qui?: &lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="Antony.py" line="1292"/>
+        <location filename="Antony.py" line="1399"/>
         <source>&lt;br&gt;&lt;i&gt;Comment: &lt;/i&gt;</source>
         <comment>tooltip</comment>
         <translation>&lt;br&gt;&lt;i&gt;Commentaire: &lt;/i&gt;</translation>
+    </message>
+    <message>
+        <location filename="Antony.py" line="1360"/>
+        <source> in </source>
+        <comment>tooltip</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="Antony.py" line="1372"/>
+        <source>&lt;br&gt;&lt;i&gt;Location: &lt;/i&gt;</source>
+        <comment>tooltip</comment>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

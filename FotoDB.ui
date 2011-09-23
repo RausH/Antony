@@ -88,9 +88,88 @@
        </spacer>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QLabel" name="EventLable">
+            <property name="text">
+             <string>Event name:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="event_comboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>143</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Location:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="loc_comboBox">
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+            <property name="currentIndex">
+             <number>-1</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Event Type:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="etype_comboBox">
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
          <widget class="QLabel" name="YearLable">
+          <property name="minimumSize">
+           <size>
+            <width>132</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="text">
            <string>Year:</string>
           </property>
@@ -121,7 +200,7 @@
            <enum>Qt::Horizontal</enum>
           </property>
           <property name="sizeType">
-           <enum>QSizePolicy::Maximum</enum>
+           <enum>QSizePolicy::Preferred</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -130,36 +209,6 @@
            </size>
           </property>
          </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
-        <item>
-         <widget class="QLabel" name="EventLable">
-          <property name="text">
-           <string>Event:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="event_comboBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>250</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="editable">
-           <bool>true</bool>
-          </property>
-         </widget>
         </item>
        </layout>
       </item>
@@ -271,12 +320,28 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
           <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
+           <enum>QSizePolicy::Preferred</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -326,7 +391,7 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>247</width>
+            <width>250</width>
             <height>65</height>
            </size>
           </property>
@@ -392,7 +457,7 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>247</width>
+            <width>250</width>
             <height>70</height>
            </size>
           </property>
@@ -589,7 +654,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
@@ -599,7 +664,6 @@
   <tabstop>ImLoad_button</tabstop>
   <tabstop>ImClear_button</tabstop>
   <tabstop>year_comboBox</tabstop>
-  <tabstop>event_comboBox</tabstop>
   <tabstop>Author_cb</tabstop>
   <tabstop>People_comboBox</tabstop>
   <tabstop>people_listWidget</tabstop>

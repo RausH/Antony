@@ -283,7 +283,9 @@ class StartGui (QtGui.QMainWindow):
                 self.Image.cksum=row[0][0]
                 self.Image.people_check=row[0][9]
                 self.Image.addyear(row[0][2])
-                self.Image.addEvent(row[0][3])
+                self.Image.addEvent_name(row[0][3])
+                self.Image.addEvent_type(row[0][10])
+                self.Image.addEvent_loc(row[0][11])
                 self.Image.addauth(row[0][4])
                 self.Image.fs_filename=row[0][7] #reset fs_filename (to be able to load image from, fs; damit neu eingefügte, bereits vorhandene und gesuchte bilder für image view von der gleichen quelle geladen werden können
 
@@ -324,6 +326,8 @@ class StartGui (QtGui.QMainWindow):
     def populate_cb(self): # befüllen der comboBoxen aus der db/ Setting and resetting comboBoxes using the database
         self.ui.year_comboBox.clear()
         self.ui.event_comboBox.clear()
+        self.ui.etype_comboBox.clear()
+        self.ui.loc_comboBox.clear()
         self.ui.Author_cb.clear()
         self.ui.People_comboBox.clear()
         self.ui.CommentInput_text.clear()
@@ -334,6 +338,14 @@ class StartGui (QtGui.QMainWindow):
         events=master_db.search_distinct({"event":"images"})
         events.insert(0,"")
         self.ui.event_comboBox.addItems(events)
+        
+        e_types=master_db.search_distinct({"future1":"images"}) # event type is stored in the future1 column in the db 
+        e_types.insert(0,"")
+        self.ui.etype_comboBox.addItems(e_types)
+        
+        locs=master_db.search_distinct({"future2":"images"}) # event location is stored in future2 in the db
+        locs.insert(0,"")
+        self.ui.loc_comboBox.addItems(locs)
 
         authors=master_db.search_distinct({"author":"images"})
         authors.insert(0,"")
@@ -357,6 +369,21 @@ class StartGui (QtGui.QMainWindow):
                 currentText())==-1:
             self.ui.event_comboBox.addItem(self.ui.event_comboBox.
                                            currentText().replace("'","`"))
+        
+        if self.ui.etype_comboBox.findText(self.ui.etype_comboBox.\
+                currentText().replace("'","`"))==-1 or\
+                self.ui.etype_comboBox.findText(self.ui.etype_comboBox.\
+                currentText())==-1:
+            self.ui.etype_comboBox.addItem(self.ui.etype_comboBox.
+                                           currentText().replace("'","`"))
+                                           
+        if self.ui.loc_comboBox.findText(self.ui.loc_comboBox.\
+                currentText().replace("'","`"))==-1 or\
+                self.ui.loc_comboBox.findText(self.ui.loc_comboBox.\
+                currentText())==-1:
+            self.ui.loc_comboBox.addItem(self.ui.loc_comboBox.
+                                           currentText().replace("'","`"))
+        
         if self.ui.Author_cb.findText(self.ui.Author_cb.\
                 currentText().replace("'","`"))==-1 or\
                 self.ui.Author_cb.findText(self.ui.Author_cb.currentText())==-1:
@@ -388,7 +415,9 @@ class StartGui (QtGui.QMainWindow):
         md5=item.toolTip()#.split("<")[0]
         md5=uniDEcode(md5.split("<")[0])
         self.md5TOimdata[md5].addyear(self.ui.year_comboBox.currentText().replace("'","`"))
-        self.md5TOimdata[md5].addEvent(self.ui.event_comboBox.currentText().replace("'","`"))
+        self.md5TOimdata[md5].addEvent_name(self.ui.event_comboBox.currentText().replace("'","`"))
+        self.md5TOimdata[md5].addEvent_type(self.ui.etype_comboBox.currentText().replace("'","`"))
+        self.md5TOimdata[md5].addEvent_loc(self.ui.loc_comboBox.currentText().replace("'","`"))
         self.md5TOimdata[md5].addauth(self.ui.Author_cb.currentText().replace("'","`"))
         comment=self.ui.CommentInput_text.toPlainText().replace("'","`")
         if comment:
@@ -454,7 +483,11 @@ class StartGui (QtGui.QMainWindow):
         if self.ui.year_comboBox.currentText():
             search_dic["year"]=self.ui.year_comboBox.currentText().replace("'","`")
         if self.ui.event_comboBox.currentText():
-            search_dic["event"]=self.ui.event_comboBox.currentText().replace("'","`")
+            search_dic["e_name"]=self.ui.event_comboBox.currentText().replace("'","`")
+        if self.ui.etype_comboBox.currentText():
+            search_dic["e_type"]=self.ui.etype_comboBox.currentText().replace("'","`")
+        if self.ui.loc_comboBox.currentText():
+            search_dic["e_loc"]=self.ui.loc_comboBox.currentText().replace("'","`")
         if self.ui.Author_cb.currentText():
             search_dic["author"]=self.ui.Author_cb.currentText().replace("'","`")
         if self.ui.CommentInput_text.toPlainText():
@@ -477,7 +510,9 @@ class StartGui (QtGui.QMainWindow):
                 self.Image.cksum=row[0]
                 self.Image.people_check=row[9]
                 self.Image.addyear(row[2])
-                self.Image.addEvent(row[3])
+                self.Image.addEvent_name(row[3])
+                self.Image.addEvent_type(row[10])
+                self.Image.addEvent_loc(row[11])
                 self.Image.addauth(row[4])
             
                 if row[5] is None:
@@ -571,10 +606,22 @@ class StartGui (QtGui.QMainWindow):
                     cksum=adler32(smd5,cksum)&0xffffffff
                     
                     if m_row[3] is None and not s_row[3] is None:
-                        up_dic["event"]=s_row[3]
+                        up_dic["e_name"]=s_row[3]
                         cksum=adler32(uniENcode(s_row[3]),cksum)&0xffffffff
                     elif not m_row[3] is None:
                         cksum=adler32(uniENcode(m_row[3]),cksum)&0xffffffff
+                        
+                    if m_row[10] is None and not s_row[10] is None:
+                        up_dic["e_type"]=s_row[10]
+                        cksum=adler32(uniENcode(s_row[10]),cksum)&0xffffffff
+                    elif not m_row[10] is None:
+                        cksum=adler32(uniENcode(m_row[10]),cksum)&0xffffffff
+                        
+                    if m_row[11] is None and not s_row[11] is None:
+                        up_dic["e_loc"]=s_row[11]
+                        cksum=adler32(uniENcode(s_row[11]),cksum)&0xffffffff
+                    elif not m_row[11] is None:
+                        cksum=adler32(uniENcode(m_row[11]),cksum)&0xffffffff
 
                     if m_row[4] is None and not s_row[4] is None:
                         up_dic["author"]=s_row[4]
@@ -627,7 +674,7 @@ class StartGui (QtGui.QMainWindow):
                     sync_db.curs.execute("SELECT pers from Im2People WHERE md5=?",(smd5,))
                     s_prows=sync_db.curs.fetchall()
                     
-                    master_db.curs.execute("insert into images (chksum, md5, year, event, author, comment, relPath, fileName, sourceFileName, people_checksum) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (uniDEcode(s_row[0]),uniDEcode(s_row[1]),uniDEcode(s_row[2]),uniDEcode(s_row[3]), uniDEcode(s_row[4]),uniDEcode(s_row[5]), uniDEcode(location.fs_dir),uniDEcode(name_in_master),uniDEcode(s_row[8]),uniDEcode(s_row[9]),))
+                    master_db.curs.execute("insert into images (chksum, md5, year, event, author, comment, relPath, fileName, sourceFileName, people_checksum, future1, future2) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (uniDEcode(s_row[0]),uniDEcode(s_row[1]),uniDEcode(s_row[2]),uniDEcode(s_row[3]), uniDEcode(s_row[4]),uniDEcode(s_row[5]), uniDEcode(location.fs_dir),uniDEcode(name_in_master),uniDEcode(s_row[8]),uniDEcode(s_row[9]),uniDEcode(s_row[10]),uniDEcode(s_row[11]),))
                     master_db.con.commit()
                     
                     fn_src=os.path.split(uniENcode(fileName))[0]
@@ -1017,9 +1064,17 @@ class database(object):
                 sql_str.append("year='")
                 sql_str.append(search_dic["year"])
                 sql_str.append("'")
-            elif skey is "event":
+            elif skey is "e_name":
                 sql_str.append("event like '%")
-                sql_str.append(search_dic["event"])
+                sql_str.append(search_dic["e_name"])
+                sql_str.append("%'")
+            elif skey is "e_type":
+                sql_str.append("future1 like '%")
+                sql_str.append(search_dic["e_type"])
+                sql_str.append("%'")
+            elif skey is "e_loc":
+                sql_str.append("future2 like '%")
+                sql_str.append(search_dic["e_loc"])
                 sql_str.append("%'")
             elif skey is "author":
                 sql_str.append("author like '%")
@@ -1040,7 +1095,7 @@ class database(object):
             if i is not len(search_dic):  # TODO auch hier die elegante chop lösung von oben umsetzen/ use the "chop" solution as used above
                 sql_str.append(" AND ")
         if not search_dic:
-            sql_str="SELECT * from images WHERE year IS NULL AND event IS NULL AND author IS NULL"
+            sql_str="SELECT * from images WHERE year IS NULL AND event IS NULL AND author IS NULL AND future1 IS NULL AND future2 IS NULL"
         print(uniENcode(sql_str))
         self.curs.execute(uniENcode(sql_str))
         rows=self.curs.fetchall()
@@ -1091,9 +1146,17 @@ class database(object):
                 sql_str.append("year='")
                 sql_str.append(up_dic["year"])
                 sql_str.append("'")
-            elif skey is "event":
+            elif skey is "e_name":
                 sql_str.append("event = '")
-                sql_str.append(up_dic["event"])
+                sql_str.append(up_dic["e_name"])
+                sql_str.append("'")
+            elif skey is "e_type":
+                sql_str.append("future1 = '")
+                sql_str.append(up_dic["e_type"])
+                sql_str.append("'")
+            elif skey is "e_loc":
+                sql_str.append("future2 = '")
+                sql_str.append(up_dic["e_loc"])
                 sql_str.append("'")
             elif skey is "author":
                 sql_str.append("author = '")
@@ -1110,7 +1173,7 @@ class database(object):
             
             if i is not len(up_dic):
                 sql_str.append(",  ")
-        
+                
         sql_str.append(" WHERE md5='")
         sql_str.append(md5)
         sql_str.append("'")
@@ -1208,7 +1271,9 @@ class SingleIm(object):
         self.fs_path=location.fs_dir
         self.fs_filename=fs_fname
         self.pili=[] 
-        self.loc=""  
+        self.e_loc="" 
+        self.e_name=""
+        self.e_type=""
         self.age=""
         self.auth=""
 
@@ -1216,9 +1281,17 @@ class SingleIm(object):
         self.cksum=0
         self.people_check=0
 
-    def addEvent(self,site): #dirty use of three differnt names for the same data TODO: change to clearer code
-        if site:
-            self.loc=site
+    def addEvent_name(self,e_name): #dirty use of three differnt names for the same data TODO: change to clearer code
+        if e_name:
+            self.e_name=e_name
+    
+    def addEvent_type(self,e_type):
+        if e_type:
+            self.e_type=e_type
+            
+    def addEvent_loc(self,e_loc):
+        if e_loc:
+            self.e_loc=e_loc
 
     def addyear(self,since):
         if since:
@@ -1261,9 +1334,45 @@ class SingleIm(object):
             tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Year: </i>","tooltip"))
             tttext.append(self.age)
 
-        if self.loc: 
+        if self.e_loc and self.e_name and self.e_type: 
             tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
-            tttext.append(self.loc)
+            tttext.append(self.e_name)
+            tttext.append(" ")
+            tttext.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
+            tttext.append(" ")
+            tttext.append(self.e_loc)
+            tttext.append(" (")
+            tttext.append(self.e_type)
+            tttext.append(")")
+        elif self.e_name and self.e_loc:
+            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext.append(self.e_name)
+            tttext.append(" ")
+            tttext.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
+            tttext.append(" ")
+            tttext.append(self.e_loc)
+        elif self.e_name and self.e_type:
+            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext.append(self.e_name)
+            tttext.append(" (")
+            tttext.append(self.e_type)
+            tttext.append(")")
+        elif self.e_type and self.e_loc:
+            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext.append(self.e_type)
+            tttext.append(" ")
+            tttext.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
+            tttext.append(" ")
+            tttext.append(self.e_loc)
+        elif self.e_name:
+            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext.append(self.e_name)
+        elif self.e_type:
+            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext.append(self.e_type)
+        elif self.e_loc:
+            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Location: </i>","tooltip"))
+            tttext.append(self.e_loc)
     
         if self.auth:
             tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Photographer: </i>","tooltip"))
@@ -1311,9 +1420,15 @@ class SingleIm(object):
 
         self.cksum=adler32(uniENcode(self.md5check),self.cksum)&0xffffffff       
 
-        if self.loc:
-            up_dic["event"]=self.loc
-            self.cksum=adler32(uniENcode(self.loc),self.cksum)&0xffffffff
+        if self.e_name:
+            up_dic["e_name"]=self.e_name
+            self.cksum=adler32(uniENcode(self.e_name),self.cksum)&0xffffffff
+        if self.e_type:
+            up_dic["e_type"]=self.e_type
+            self.cksum=adler32(uniENcode(self.e_type),self.cksum)&0xffffffff
+        if self.e_loc:
+            up_dic["e_loc"]=self.e_loc
+            self.cksum=adler32(uniENcode(self.e_loc),self.cksum)&0xffffffff
         if self.auth:
             up_dic["author"]=self.auth
             self.cksum=adler32(uniENcode(self.auth),self.cksum)&0xffffffff # TODO uniENcode vs uniDEcode !
