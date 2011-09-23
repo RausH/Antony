@@ -69,6 +69,7 @@
 #     DONE: TODO: reset the viewer after clicking "Clear display" (or close it), this should help to avoid that the viewer displays different images than on the image display area; added a call to viewer.close() to ImClear at about line 310
 #     Done: TODO: Sort filenames before loading files into the image view area to preserve chronology as files in digital cameras are named chronologically ascending.
 #	ADDED: closeEvent to StartGui to be able to do someting when the mainwindow is closed (e.g. close the viewer)
+#       CHANGED: The event metadata has been splitt into event name, event type, event location;
 
 import locale
 import datetime
