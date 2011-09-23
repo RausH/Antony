@@ -22,8 +22,8 @@
 
 # For License and Copyright of EXIF.py please refer to the header in the EXIF.py file
 
-# This is going to be the 18th release candidate of the Kronstorf Scout Image DB it 
-# it is based on Antony.py RC17
+# This is going to be the 19th release candidate of the Kronstorf Scout Image DB it 
+# it is based on Antony.py RC18
 # It aims to provide a means to associate metadata to images (year, event, 
 # photographer, people on the image and some comments). Most importantly 
 # it enables a rather small group of people who can meet physically to share and
