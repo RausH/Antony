@@ -100,7 +100,9 @@ ICON_SIZE=250   # Global Variable to set the image scaling and icon size
 IMAGE_FORMATS= ["BMP","bmp","GIF","gif","JPG","jpg","PEG","peg","PNG","png","IFF","iff","TIF","tif"] #PEG...JPEG and IFF ...TIFF; global variable to identify imagefiles upon drag and drop
 
 def uniDEcode(string): # using utf8 encoding in all strings (better than modifying site.py)
-    if not isinstance(string,unicode) and not isinstance(string,QtCore.QString) and isinstance(string,str):
+    if string is None: # should only be the case in db_sync
+        return string
+    elif not isinstance(string,unicode) and not isinstance(string,QtCore.QString) and isinstance(string,str):
         #print("From UTF-8 TO UNICODE")
         return unicode(string,"utf8")
     elif isinstance(string, QtCore.QString):
@@ -808,7 +810,7 @@ class ViewerDialog(QtGui.QDialog):
         self.p_pointer = 0
         
     def wheel_event (self, event):
-        numDegrees = event.delta() / 8
+        numDegrees = event.delta() / 8.0
         numSteps = numDegrees / 15.0
         self.zoom(numSteps)
         event.accept()
@@ -1120,7 +1122,8 @@ class database(object):
                 outli.append(t)
             except IndexError:     # if there is only one value per tuble:
                 outli.append(row[0])
-            
+        
+        outli.sort()
         if outli:      # check for valid return list
             if outli[0] is not None:
                 return outli
