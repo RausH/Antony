@@ -322,9 +322,11 @@ class StartGui (QtGui.QMainWindow):
 
     def clear_piwili(self):
         self.ui.people_listWidget.clear()
+        self.ui.People_comboBox.setCurrentIndex(0)
 
     def remove_single_name(self):
         nix=self.ui.people_listWidget.takeItem(self.ui.people_listWidget.currentRow())
+        self.ui.People_comboBox.setCurrentIndex(0)
 
     def populate_cb(self): # befüllen der comboBoxen aus der db/ Setting and resetting comboBoxes using the database
         self.ui.year_comboBox.clear()
@@ -391,13 +393,21 @@ class StartGui (QtGui.QMainWindow):
                 currentText().replace("'","`"))==-1 or\
                 self.ui.Author_cb.findText(self.ui.Author_cb.currentText())==-1:
             self.ui.Author_cb.addItem(self.ui.Author_cb.currentText().replace("'","`"))
+            
+        if self.ui.People_comboBox.currentText():
+            self.people2list(self.ui.People_comboBox.currentText())
 
     def people2list(self,name): # eintragen der personen die in der comboBox ausgewählt wurden in die widget liste die die namen tragen sollen
         if name.count(";") is 2:
-            if not self.ui.people_listWidget.findItems(name,QtCore.Qt.MatchExactly):
+            if not self.ui.people_listWidget.findItems(name,QtCore.Qt.MatchExactly) or\
+                    self.ui.people_listWidget.findItems(name.replace("'","`"),QtCore.Qt.MatchExactly):
                 piliwiit=QtGui.QListWidgetItem()
-                piliwiit.setText(name)
+                piliwiit.setText(name.replace("'","`"))
                 self.ui.people_listWidget.addItem(piliwiit)
+            if self.ui.People_comboBox.findText(self.ui.People_comboBox.\
+                   currentText().replace("'","`"))==-1 or\
+                   self.ui.People_comboBox.findText(self.ui.People_comboBox.currentText())==-1:
+                self.ui.People_comboBox.addItem(self.ui.People_comboBox.currentText().replace("'","`"))
 
     def update_allImages(self):  
         self.set_statusbar(uniDEcode(self.tr("Recording data for all displayed pictures to database")))
