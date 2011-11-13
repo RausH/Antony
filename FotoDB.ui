@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../icon.png</normaloff>../icon.png</iconset>
+    <normaloff>../../../../../.designer/icon.png</normaloff>../../../../../.designer/icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_12">
@@ -32,7 +32,7 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>10</height>
+          <height>13</height>
          </size>
         </property>
        </spacer>
@@ -81,8 +81,8 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>421</width>
+          <height>13</height>
          </size>
         </property>
        </spacer>
@@ -219,8 +219,8 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>421</width>
+          <height>13</height>
          </size>
         </property>
        </spacer>
@@ -412,8 +412,8 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>421</width>
+          <height>13</height>
          </size>
         </property>
        </spacer>
@@ -421,34 +421,23 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_8">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QLabel" name="CommentLable">
-            <property name="text">
-             <string>Comment:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Fixed</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
+         <widget class="QLabel" name="CommentLable">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Comment:</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPlainTextEdit" name="CommentInput_text">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -457,8 +446,8 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>250</width>
-            <height>70</height>
+            <width>0</width>
+            <height>0</height>
            </size>
           </property>
           <property name="tabChangesFocus">
@@ -466,7 +455,45 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QComboBox" name="Comment_cb">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>325</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+          <property name="insertPolicy">
+           <enum>QComboBox::InsertAlphabetically</enum>
+          </property>
+         </widget>
+        </item>
        </layout>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>13</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
        <spacer name="verticalSpacer_3">
@@ -475,8 +502,8 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>421</width>
+          <height>13</height>
          </size>
         </property>
        </spacer>
@@ -535,7 +562,7 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>5</height>
+          <height>13</height>
          </size>
         </property>
        </spacer>
@@ -578,8 +605,8 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>421</width>
+          <height>13</height>
          </size>
         </property>
        </spacer>
@@ -591,8 +618,8 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>421</width>
+          <height>13</height>
          </size>
         </property>
        </spacer>
@@ -635,8 +662,8 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>421</width>
+          <height>13</height>
          </size>
         </property>
        </spacer>

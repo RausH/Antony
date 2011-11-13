@@ -335,6 +335,7 @@ class StartGui (QtGui.QMainWindow):
         self.ui.loc_comboBox.clear()
         self.ui.Author_cb.clear()
         self.ui.People_comboBox.clear()
+        self.ui.Comment_cb.clear()
         self.ui.CommentInput_text.clear()
         years=master_db.search_distinct({"year":"images"})
         years.insert(0,"")
@@ -355,6 +356,17 @@ class StartGui (QtGui.QMainWindow):
         authors=master_db.search_distinct({"author":"images"})
         authors.insert(0,"")
         self.ui.Author_cb.addItems(authors)
+        
+        comments_li=master_db.search_distinct({"comment":"images"})
+        com_cb_li=[""]
+        for comment_str in comments_li:
+            com_li=QtCore.QString(comment_str).split(";",QtCore.QString.SkipEmptyParts)
+            for com in com_li:
+                com=com.trimmed()
+                if not com in com_cb_li:
+                    com_cb_li.append(com)
+        com_cb_li.sort()
+        self.ui.Comment_cb.addItems(com_cb_li)
 
         persons=master_db.search_distinct({"pers":"Im2People"})
         persons.insert(0,"")
@@ -396,10 +408,16 @@ class StartGui (QtGui.QMainWindow):
             
         if self.ui.People_comboBox.currentText():
             self.people2list(self.ui.People_comboBox.currentText())
+        
+        if self.ui.Comment_cb.findText(self.ui.Comment_cb.\
+                currentText().replace("'","`"))==-1 or\
+                self.ui.Comment_cb.findText(self.ui.Comment_cb.currentText())==-1:
+            self.ui.Comment_cb.addItem(self.ui.Comment_cb.currentText().replace("'","`"))
+            
 
     def people2list(self,name): # eintragen der personen die in der comboBox ausgewählt wurden in die widget liste die die namen tragen sollen
         if name.count(";") is 2:
-            if not self.ui.people_listWidget.findItems(name,QtCore.Qt.MatchExactly) or\
+            if not self.ui.people_listWidget.findItems(name,QtCore.Qt.MatchExactly) or not\
                     self.ui.people_listWidget.findItems(name.replace("'","`"),QtCore.Qt.MatchExactly):
                 piliwiit=QtGui.QListWidgetItem()
                 piliwiit.setText(name.replace("'","`"))
@@ -408,6 +426,8 @@ class StartGui (QtGui.QMainWindow):
                    currentText().replace("'","`"))==-1 or\
                    self.ui.People_comboBox.findText(self.ui.People_comboBox.currentText())==-1:
                 self.ui.People_comboBox.addItem(self.ui.People_comboBox.currentText().replace("'","`"))
+        else:
+            self.set_statusbar(uniDEcode(self.tr("WARNING: Only names containing two ; are accepted")))
 
     def update_allImages(self):  
         self.set_statusbar(uniDEcode(self.tr("Recording data for all displayed pictures to database")))
@@ -432,10 +452,8 @@ class StartGui (QtGui.QMainWindow):
         self.md5TOimdata[md5].addEvent_type(self.ui.etype_comboBox.currentText().replace("'","`"))
         self.md5TOimdata[md5].addEvent_loc(self.ui.loc_comboBox.currentText().replace("'","`"))
         self.md5TOimdata[md5].addauth(self.ui.Author_cb.currentText().replace("'","`"))
-        comment=self.ui.CommentInput_text.toPlainText().replace("'","`")
-        if comment:
-            comment.append("; ")
-        self.md5TOimdata[md5].addcomment(comment)
+        #comment=self.ui.CommentInput_text.toPlainText().replace("'","`")  #delete after test
+        self.md5TOimdata[md5].addcomment(self.ui.Comment_cb.currentText().replace("'","`"))
 
         for i in range(self.ui.people_listWidget.count()):
             pitem=self.ui.people_listWidget.item(i)
@@ -503,8 +521,10 @@ class StartGui (QtGui.QMainWindow):
             search_dic["e_loc"]=self.ui.loc_comboBox.currentText().replace("'","`")
         if self.ui.Author_cb.currentText():
             search_dic["author"]=self.ui.Author_cb.currentText().replace("'","`")
-        if self.ui.CommentInput_text.toPlainText():
-            search_dic["comment"]=self.ui.CommentInput_text.toPlainText().replace("'","`")
+       # if self.ui.CommentInput_text.toPlainText():  # delete after test
+        #    search_dic["comment"]=self.ui.CommentInput_text.toPlainText().replace("'","`")
+        if self.ui.Comment_cb.currentText():
+            search_dic["comment"]=self.ui.Comment_cb.currentText().replace("'","`")
         if self.ui.people_listWidget.count():
             name=[]
             for i in range(self.ui.people_listWidget.count()):
@@ -612,9 +632,11 @@ class StartGui (QtGui.QMainWindow):
                     #if pili:
                     people_check=master_db.insert_Peop(smd5,pili)
                     if people_check:
+                        people_check=uniDEcode(people_check)
+                        up_dic["people_checksum"]=people_check
                         people_check=uniENcode(people_check)
                         cksum=adler32(people_check,cksum)&0xffffffff
-                        up_dic["people_checksum"]=people_check
+                        
                     
                     cksum=adler32(smd5,cksum)&0xffffffff
                     
@@ -704,8 +726,8 @@ class StartGui (QtGui.QMainWindow):
             sync_db.close_db()
             
      
-    def set_statusbar(self, message):
-        self.ui.statusbar.showMessage(uniDEcode(message))
+    def set_statusbar(self, message,t=0):
+        self.ui.statusbar.showMessage(uniDEcode(message),t)
                
 
 class StartDialog (QtGui.QDialog):
@@ -1329,16 +1351,21 @@ class SingleIm(object):
                 self.auth_nick=fotogrli[0]
                 self.auth_nam=fotogrli[1]
                 self.auth_famnam=fotogrli[2]
+            else:
+                self.set_statusbar(uniDEcode(self.tr("WARNING: Only names containing two ; are accepted")))
 
     def addperson(self,pers):    
         if pers not in self.pili:
             self.pili.append(pers)
 
     def addcomment(self,com):
-        if not self.comment.contains(com,1):
-            self.comment.append(com)
-            #print(adler32(self.comment,0))&0xffffffff
-
+        com_li=QtCore.QString(com).split(";",QtCore.QString.SkipEmptyParts)
+        for com in com_li:
+	    com=com.trimmed()
+            if not self.comment.contains(com,1):
+                self.comment.append(com)
+                self.comment.append("; ")
+                
     def generateToolTip(self):
         tttext=QtCore.QString(self.md5check)
         tttext.append("<br>")
