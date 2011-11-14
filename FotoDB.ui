@@ -469,6 +469,9 @@
             <height>0</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string>separate more comments by ;</string>
+          </property>
           <property name="layoutDirection">
            <enum>Qt::LeftToRight</enum>
           </property>

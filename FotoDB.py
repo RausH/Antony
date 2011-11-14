@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'FotoDB.ui'
 #
-# Created: Sun Nov 13 22:58:18 2011
+# Created: Sun Nov 13 23:54:44 2011
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -243,6 +243,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.Comment_cb.sizePolicy().hasHeightForWidth())
         self.Comment_cb.setSizePolicy(sizePolicy)
         self.Comment_cb.setMinimumSize(QtCore.QSize(325, 0))
+        self.Comment_cb.setToolTip(QtGui.QApplication.translate("MainWindow", "separate more comments by ;", None, QtGui.QApplication.UnicodeUTF8))
         self.Comment_cb.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.Comment_cb.setEditable(True)
         self.Comment_cb.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)

@@ -289,7 +289,7 @@ class StartGui (QtGui.QMainWindow):
                 self.Image.addEvent_name(row[0][3])
                 self.Image.addEvent_type(row[0][10])
                 self.Image.addEvent_loc(row[0][11])
-                self.Image.addauth(row[0][4])
+                auth_ok_txt=self.Image.addauth(row[0][4])
                 self.Image.fs_filename=row[0][7] #reset fs_filename (to be able to load image from, fs; damit neu eingefügte, bereits vorhandene und gesuchte bilder für image view von der gleichen quelle geladen werden können
 
                 if row[0][5] is None:
@@ -406,14 +406,17 @@ class StartGui (QtGui.QMainWindow):
                 self.ui.Author_cb.findText(self.ui.Author_cb.currentText())==-1:
             self.ui.Author_cb.addItem(self.ui.Author_cb.currentText().replace("'","`"))
             
+        name_ok=1
         if self.ui.People_comboBox.currentText():
-            self.people2list(self.ui.People_comboBox.currentText())
-        
+            name_ok=self.people2list(self.ui.People_comboBox.currentText())
+            
         if self.ui.Comment_cb.findText(self.ui.Comment_cb.\
                 currentText().replace("'","`"))==-1 or\
                 self.ui.Comment_cb.findText(self.ui.Comment_cb.currentText())==-1:
             self.ui.Comment_cb.addItem(self.ui.Comment_cb.currentText().replace("'","`"))
-            
+        
+        return name_ok
+        
 
     def people2list(self,name): # eintragen der personen die in der comboBox ausgewählt wurden in die widget liste die die namen tragen sollen
         if name.count(";") is 2:
@@ -426,24 +429,35 @@ class StartGui (QtGui.QMainWindow):
                    currentText().replace("'","`"))==-1 or\
                    self.ui.People_comboBox.findText(self.ui.People_comboBox.currentText())==-1:
                 self.ui.People_comboBox.addItem(self.ui.People_comboBox.currentText().replace("'","`"))
+            self.set_statusbar(uniDEcode(self.tr("Name o.k.")))
+            return 1
         else:
             self.set_statusbar(uniDEcode(self.tr("WARNING: Only names containing two ; are accepted")))
+            return 0
 
-    def update_allImages(self):  
+    def update_allImages(self): 
+        auth_ok=1
         self.set_statusbar(uniDEcode(self.tr("Recording data for all displayed pictures to database")))
-        self.add_cb()
+        name_ok=self.add_cb()
         for row in range(self.liwi.count()):
             item=self.liwi.item(row)
-            self.update_Image(item)
-        self.set_statusbar(uniDEcode(self.tr("All data recorded: Ready")))
+            auth_ok=self.update_Image(item)
+        if auth_ok==1 and name_ok==1:
+            self.set_statusbar(uniDEcode(self.tr("All data recorded: Ready")))
+        else:
+            self.set_statusbar(uniDEcode(self.tr("WARNING: Only names containing two ; are accepted")))
         # TODO check ob fürs update des images uniDEcode notwendig ist (siehe update_singleImage) oder obs nicht gebraucht wird (siehe update_allImages)    
 
     def update_singleImage(self):
-        self.add_cb()
+        auth_ok=1
+        name_ok=self.add_cb()
         item=self.liwi.currentItem()
-        self.update_Image(item)
-        self.set_statusbar(uniDEcode(self.tr("Recorded data for single picuture: Ready")))
-       
+        auth_ok=self.update_Image(item)
+        if auth_ok==1 and name_ok==1:
+            self.set_statusbar(uniDEcode(self.tr("Recorded data for single picuture: Ready")))
+        else:
+            self.set_statusbar(uniDEcode(self.tr("WARNING: Only names containing two ; are accepted")))
+        
     def update_Image(self,item):
         md5=item.toolTip()#.split("<")[0]
         md5=uniDEcode(md5.split("<")[0])
@@ -451,7 +465,7 @@ class StartGui (QtGui.QMainWindow):
         self.md5TOimdata[md5].addEvent_name(self.ui.event_comboBox.currentText().replace("'","`"))
         self.md5TOimdata[md5].addEvent_type(self.ui.etype_comboBox.currentText().replace("'","`"))
         self.md5TOimdata[md5].addEvent_loc(self.ui.loc_comboBox.currentText().replace("'","`"))
-        self.md5TOimdata[md5].addauth(self.ui.Author_cb.currentText().replace("'","`"))
+        auth_ok=self.md5TOimdata[md5].addauth(self.ui.Author_cb.currentText().replace("'","`"))
         #comment=self.ui.CommentInput_text.toPlainText().replace("'","`")  #delete after test
         self.md5TOimdata[md5].addcomment(self.ui.Comment_cb.currentText().replace("'","`"))
 
@@ -463,6 +477,7 @@ class StartGui (QtGui.QMainWindow):
         item.setToolTip(self.md5TOimdata[md5].generateToolTip())
         self.liwi.setCurrentItem(item) 
         self.md5TOimdata[md5].update_DB()
+        return auth_ok
 
     def export_allImages(self):
         export_dir=QtGui.QFileDialog.getExistingDirectory(self, uniDEcode(self.tr("Export Folder")), "")
@@ -1351,8 +1366,11 @@ class SingleIm(object):
                 self.auth_nick=fotogrli[0]
                 self.auth_nam=fotogrli[1]
                 self.auth_famnam=fotogrli[2]
+                return 1
             else:
-                self.set_statusbar(uniDEcode(self.tr("WARNING: Only names containing two ; are accepted")))
+                return 0
+        else:
+            return 1
 
     def addperson(self,pers):    
         if pers not in self.pili:
