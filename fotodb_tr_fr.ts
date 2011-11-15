@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="2.0" language="fr_FR" sourcelanguage="">
+<!DOCTYPE TS>
+<TS version="2.0" language="fr_FR">
 <context>
     <name>Dialog</name>
     <message>
@@ -25,22 +26,22 @@
     <message>
         <location filename="ViewerUI.py" line="41"/>
         <source>Antony Viewer</source>
-        <translation type="unfinished">Antony Visualiseur</translation>
+        <translation>Antony Visualiseur</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="72"/>
         <source>Prev.</source>
-        <translation type="unfinished">Retourner</translation>
+        <translation>Retourner</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="82"/>
         <source>Next</source>
-        <translation type="unfinished">Continuer</translation>
+        <translation>Continuer</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="94"/>
         <source>Close</source>
-        <translation type="unfinished">Fermer</translation>
+        <translation>Fermer</translation>
     </message>
 </context>
 <context>
