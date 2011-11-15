@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'FotoDB.ui'
 #
-# Created: Sun Nov 13 23:54:44 2011
+# Created: Tue Nov 15 14:57:09 2011
 #      by: PyQt4 UI code generator 4.8.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -20,7 +20,8 @@ class Ui_MainWindow(object):
         MainWindow.resize(800, 600)
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Antony", None, QtGui.QApplication.UnicodeUTF8))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("../../../../../.designer/icon.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icon.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("icon.png")), QtGui.QIcon.Normal, QtGui.QIcon.On)
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
