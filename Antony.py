@@ -289,7 +289,7 @@ class StartGui (QtGui.QMainWindow):
                 self.Image.addEvent_name(row[0][3])
                 self.Image.addEvent_type(row[0][10])
                 self.Image.addEvent_loc(row[0][11])
-                auth_ok_txt=self.Image.addauth(row[0][4])
+                auth_ok=self.Image.addauth(row[0][4])
                 self.Image.fs_filename=row[0][7] #reset fs_filename (to be able to load image from, fs; damit neu eingefügte, bereits vorhandene und gesuchte bilder für image view von der gleichen quelle geladen werden können
 
                 if row[0][5] is None:
