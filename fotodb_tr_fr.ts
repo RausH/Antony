@@ -25,22 +25,22 @@
     <message>
         <location filename="ViewerUI.py" line="41"/>
         <source>Antony Viewer</source>
-        <translation type="obsolete">Antony Visualiseur</translation>
+        <translation type="unfinished">Antony Visualiseur</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="72"/>
         <source>Prev.</source>
-        <translation type="obsolete">Retourner</translation>
+        <translation type="unfinished">Retourner</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="82"/>
         <source>Next</source>
-        <translation type="obsolete">Continuer</translation>
+        <translation type="unfinished">Continuer</translation>
     </message>
     <message>
         <location filename="ViewerUI.py" line="94"/>
         <source>Close</source>
-        <translation type="obsolete">Fermer</translation>
+        <translation type="unfinished">Fermer</translation>
     </message>
 </context>
 <context>
