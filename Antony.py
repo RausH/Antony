@@ -22,8 +22,8 @@
 
 # For License and Copyright of EXIF.py please refer to the header in the EXIF.py file
 
-# This is going to be the 20th release candidate of the Kronstorf Scout Image DB it 
-# it is based on Antony.py RC19
+# This is going to be the 21th release candidate of the Kronstorf Scout Image DB it 
+# it is based on Antony.py RC20
 # It aims to provide a means to associate metadata to images (year, event, 
 # photographer, people on the image and some comments). Most importantly 
 # it enables a rather small group of people who can meet physically to share and
@@ -271,8 +271,10 @@ class StartGui (QtGui.QMainWindow):
             if not row:   # image not in db
                 self.set_statusbar(uniDEcode(self.tr("Insert, copy and display new picture")))
                 self.md5TOimdata[self.Image.md5check]=self.Image  # dictionary containing all images now shown in the window, the key is the md5 of the image
-                pixmp=rotate_image(QtGui.QPixmap(fileName),tags)
-                icon=QtGui.QIcon(pixmp.scaledToHeight(ICON_SIZE)) #scaledToHeight spart massiv speicherplatz
+                #pixmp=rotate_image(QtGui.QPixmap(fileName),tags)
+                pixmp=rotate_image(QtGui.QImage(fileName),tags)
+                #icon=QtGui.QIcon(pixmp.scaledToHeight(ICON_SIZE)) #scaledToHeight spart massiv speicherplatz
+                icon=QtGui.QIcon(QtGui.QPixmap(pixmp.scaledToHeight(ICON_SIZE)))
                 self.liwiit.setIcon(icon)
                 self.liwiit.setToolTip(self.Image.generateToolTip())
                 self.liwiit.setData(32,uniDEcode(os.path.join(uniDEcode(location.pathName), uniDEcode(location.fs_dir), uniDEcode(self.Image.fs_filename))))
@@ -305,8 +307,8 @@ class StartGui (QtGui.QMainWindow):
 
                 self.md5TOimdata[self.Image.md5check]=self.Image 
 
-                pixmp=rotate_image(QtGui.QPixmap(fileName),tags)
-                icon=QtGui.QIcon(pixmp.scaledToHeight(ICON_SIZE)) 
+                pixmp=rotate_image(QtGui.QImage(fileName),tags)  # replaced QPixmap by QImage
+                icon=QtGui.QIcon(QtGui.QPixmap(pixmp.scaledToHeight(ICON_SIZE)))
                 self.liwiit.setIcon(icon)
                 self.liwiit.setToolTip(self.Image.generateToolTip())
                 self.liwiit.setData(32,uniDEcode(os.path.join(uniDEcode(location.pathName), uniDEcode(location.fs_dir), uniDEcode(self.Image.fs_filename))))
@@ -580,8 +582,9 @@ class StartGui (QtGui.QMainWindow):
                 f=open(os.path.join(uniDEcode(location.pathName), uniDEcode(self.Image.fs_path), uniDEcode(self.Image.fs_filename)), 'rb')  # according to EXIF.py
                 tags = EXIF.process_file(f, details=False)
                 f.close()
-                pixmp=rotate_image(QtGui.QPixmap(os.path.join(uniDEcode(location.pathName), uniDEcode(self.Image.fs_path), uniDEcode(self.Image.fs_filename))),tags)
-                icon=QtGui.QIcon(pixmp.scaledToHeight(ICON_SIZE)) 
+                # replaced QPixmap by QImage
+                pixmp=rotate_image(QtGui.QImage(os.path.join(uniDEcode(location.pathName), uniDEcode(self.Image.fs_path), uniDEcode(self.Image.fs_filename))),tags)
+                icon=QtGui.QIcon(QtGui.QPixmap(pixmp.scaledToHeight(ICON_SIZE)))
                 """ New style it got even worse ... so back to the old one
                 icon=QtGui.QIcon()
                 icon.addFile(os.path.join(uniDEcode(location.pathName), uniDEcode(self.Image.fs_path), uniDEcode(self.Image.fs_filename)), QtCore.QSize(ICON_SIZE,ICON_SIZE))"""
@@ -913,7 +916,7 @@ class ViewerDialog(QtGui.QDialog):
                                             QtCore.Qt.FastTransformation)"""
         self.p_view=self.scale_image(self.l_pix[self.pp_pointer])
         event.accept()
-        
+                
     def zoom(self, step):
         self.scene.clear()
         w = self.c_view.size().width()
@@ -970,14 +973,14 @@ class ViewerDialog(QtGui.QDialog):
         wth, hgt = QtCore.QSize.width(size_img), QtCore.QSize.height(size_img)
         self.scene.clear()
         self.scene.setSceneRect(0, 0, wth, hgt)
-        self.scene.addPixmap(self.c_view)
+        self.scene.addPixmap(QtGui.QPixmap(self.c_view)) # QImage to QPixmap conversion
         QtCore.QCoreApplication.processEvents()
 
     def load_current(self):
         f=open(self.images[self.i_pointer], 'rb')  # according to EXIF.py
         tags = EXIF.process_file(f, details=False)
         f.close()
-        self.l_pix[self.p_pointer]=rotate_image(QtGui.QPixmap(self.images[self.i_pointer]),tags)
+        self.l_pix[self.p_pointer]=rotate_image(QtGui.QImage(self.images[self.i_pointer]),tags) # QImage as working class
         
         #self.p_width=self.l_pix[self.p_pointer].size().width()
         #self.p_height=self.l_pix[self.p_pointer].size().height()
@@ -987,7 +990,7 @@ class ViewerDialog(QtGui.QDialog):
                                             QtCore.Qt.FastTransformation)"""
         #change the previous line with QtCore.Qt.SmoothTransformation eventually
         self.view_current()
-
+        
     def load_next(self):
         if self.i_pointer == len(self.images)-1:
             p = 0
@@ -996,7 +999,7 @@ class ViewerDialog(QtGui.QDialog):
         f=open(self.images[p], 'rb')  # according to EXIF.py
         tags = EXIF.process_file(f, details=False)
         f.close()
-        self.l_pix[self.p_pointer] = rotate_image(QtGui.QPixmap(self.images[p]),tags)
+        self.l_pix[self.p_pointer] = rotate_image(QtGui.QImage(self.images[p]),tags)
         self.n_view=self.scale_image(self.l_pix[self.p_pointer])
         """self.n_view = self.l_pix[self.p_pointer].scaled(self.max_vsize, 
                                             self.max_vsize, 
@@ -1011,7 +1014,7 @@ class ViewerDialog(QtGui.QDialog):
         f=open(self.images[p], 'rb')  # according to EXIF.py
         tags = EXIF.process_file(f, details=False)
         f.close()
-        self.l_pix[self.p_pointer]=rotate_image(QtGui.QPixmap(self.images[p]),tags)
+        self.l_pix[self.p_pointer]=rotate_image(QtGui.QImage(self.images[p]),tags)
         self.p_view=self.scale_image(self.l_pix[self.p_pointer])
         """self.p_view = self.l_pix[self.p_pointer].scaled(self.max_vsize, 
                                             self.max_vsize, 
