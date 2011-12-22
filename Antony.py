@@ -70,6 +70,17 @@
 #     Done: TODO: Sort filenames before loading files into the image view area to preserve chronology as files in digital cameras are named chronologically ascending.
 #	ADDED: closeEvent to StartGui to be able to do someting when the mainwindow is closed (e.g. close the viewer)
 #       CHANGED: The event metadata has been splitt into event name, event type, event location;
+#    TODO: enable search for more than one comment in arbitrary order (if you enter someting like "House; Sun;" 
+#         into the comment field, the searchresults should contain images having comments like: ...; House; Sun; ... and ...;Sun; House; ... and House; ... ;Sun; etc.
+#         that means: split the terms entered in the comment field and link search for individual terms by AND
+#         REMARKS: i think adding a search within results button serves better for this purpose
+#    TODO: restart antoy viewer after loading additional images (search or add new). ev. add viewer state variable/method
+#         set_viewer_visible / get_viewer_visible. after loading images querry viewer state, if visible: add new images
+#         to viewer (ev. by restarting it; how to determine which images was on display at that time (something like: viewer.get_current_image)? 
+#         (not to reset viewer to the first image))
+#    TODO: add "search within results", add an additional button to search within search results; dont forget 
+#         to disable this button if there are no images on the right side (there are no search results on the 
+#         right side)
 
 import locale
 import datetime
