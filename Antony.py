@@ -22,8 +22,8 @@
 
 # For License and Copyright of EXIF.py please refer to the header in the EXIF.py file
 
-# This is going to be the 21th release candidate of the Kronstorf Scout Image DB it 
-# it is based on Antony.py RC20
+# This is going to be the 22th release candidate of the Kronstorf Scout Image DB it 
+# it is based on Antony.py RC21
 # It aims to provide a means to associate metadata to images (year, event, 
 # photographer, people on the image and some comments). Most importantly 
 # it enables a rather small group of people who can meet physically to share and
@@ -81,6 +81,11 @@
 #    TODO: add "search within results", add an additional button to search within search results; dont forget 
 #         to disable this button if there are no images on the right side (there are no search results on the 
 #         right side)
+#    TODO: consider implementing to clear dataentryfields after search; this would help to forget to remove 
+#         unwanted search parameters for the next search (german: hilft beim beseitigen von vergessenen suchparametern)
+#    TODO: consider output of list where differences between sync and master are listet (this can happen in case
+#         original master and sync have different data for certain keywords because data in master is not overwritten
+#         if sync differs)
 
 import locale
 import datetime
