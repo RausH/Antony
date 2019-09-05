@@ -7,7 +7,9 @@ internet based workflow.
 
 Installation:
 
-Make sure you have Python and PyQt4 installed on the target system. Then you can switch to an Rc_ labeled branch
+Make sure you have Python 2 and PyQt4 installed on the target system. Then you can switch to an Rc_ labeled branch
 download those files and copy them to a local directory. The program is started by executing Antony.py.
+
+But you can also use the master branch. There you find Antony for Python 3.
 
 For further information please read the wiki pages provided at https://github.com/RausH/Antony/wiki.
