@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>753</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -167,7 +167,7 @@
          <widget class="QLabel" name="YearLable">
           <property name="minimumSize">
            <size>
-            <width>132</width>
+            <width>143</width>
             <height>0</height>
            </size>
           </property>
@@ -194,6 +194,22 @@
            <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item>
          <spacer name="horizontalSpacer">
@@ -435,28 +451,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QPlainTextEdit" name="CommentInput_text">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="tabChangesFocus">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QComboBox" name="Comment_cb">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -675,7 +669,24 @@
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="ImDisplay"/>
+     <layout class="QVBoxLayout" name="ImDisplay">
+      <item>
+       <spacer name="horizontalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::MinimumExpanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -685,7 +696,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>30</height>
     </rect>
    </property>
   </widget>
@@ -700,7 +711,6 @@
   <tabstop>people_listWidget</tabstop>
   <tabstop>RemovePeople_button</tabstop>
   <tabstop>ClearPeopleList_button</tabstop>
-  <tabstop>CommentInput_text</tabstop>
   <tabstop>SearchDB_button</tabstop>
   <tabstop>AllInsert_button</tabstop>
   <tabstop>ExportAll_button</tabstop>

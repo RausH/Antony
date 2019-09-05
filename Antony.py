@@ -60,7 +60,7 @@
 #    DONE: add .tif to IMAGE_FORMATS
 #    DONE (but not hard tested): Prevent overwriting of images by copying from sync to master during sync (check if filename allready in master and increase image number in this case; like in the general image addition process) line 528ff
 #      DONE: implemented a separate function file_in_fs_check (because this functionality is needed twice)
-#    TODO: bei image viewer die resize fkt mit timer connecten und erst nach ablauf der zeit die bilder größe neu berechnen (unnötig)
+#    DONE: TODO: bei image viewer die resize fkt mit timer connecten und erst nach ablauf der zeit die bilder größe neu berechnen (unnötig)
 #   DONE: TODO: bei image viewer die v_max und die h_max separat berechnen und die bilder entsprechend skalieren (damit auch breite bilder bis an den rand gehen)
 #    DONE: TODO: check image orientation in exif and rotate them in the viewer 
 #    DONE: TODO: make the rotate_image method (in Viewer) a "global" function and rotate the images for the imagedisplay area (liwi) too. (get the tags around line 220 and rotate image around line 249 and 282; the images that have been searched are not opened "rb" so i have to get the tags septerately ~at line 453 and rotate at line 455
@@ -86,15 +86,22 @@
 #    TODO: consider output of list where differences between sync and master are listet (this can happen in case
 #         original master and sync have different data for certain keywords because data in master is not overwritten
 #         if sync differs)
+#    DONE:TODO: sorry for german but i dont know how to note this in english: wenn in einer comboBox daten eingegeben wurden 
+#         sollten für die anderen (noch nicht festgelegten comboBoxen) die auswahl angepasst werden (select distinct zz from 
+#         ... where xx='yyy') DONE: reconsidering this: it only would help for "search" it would have hindering 
+#         effects on data entry. as long as i do not change the data input paradigm (e.g. UI with search and entry mode)
+#         users might need to try some combinations of keywords to get the desired results.
+#    TODO: implement attachments as zip files to images; calculate checksum from CRC of files in zip; save check-
+#         sum in colunm future3
+#    TODO: enable "öffnen mit" in file manager (sorry for german, this is just an idea: ev. die sqlite datei als start parameter übergeben (oder fragen ob parameter übergeben wurden), gerade so wie es bei einer console geschehen würde)
+#    TODO: on searching for names put wild card for missing info. e.g. ;;Smith shoudl search for any person with surename Smith (*;*;Smith) DONE: replaced pers= with pers like in searchstring
 
 import locale
 import datetime
-import codecs
 import hashlib
 import sys
-from PyQt4 import QtGui, QtCore
-#from PyQt4.QtCore import QString as qstr
-#from pysqlite2 import dbapi2 as sqlite3
+import re
+from PySide2 import QtGui, QtCore, QtWidgets
 import sqlite3 #was ist der unterschied zwischen dem internen modul und pysqlite2
 from zlib import adler32
 from shutil import copy2
@@ -104,6 +111,7 @@ import EXIF
 from FotoDB import Ui_MainWindow 
 from SelectStartDB_dialogue import Ui_Dialog
 from ViewerUI import Ui_Dialog as Ui_Viewer
+#from AttDialog import Ui_Dialog as Ui_AttDialog
 
 # TODO die sache mit dem encoding aus der windows version übernehmen. ERLEDIGT:
 # section to set the encoding right in the py2exe windows version. does no harm in the other versions...
@@ -115,43 +123,15 @@ from ViewerUI import Ui_Dialog as Ui_Viewer
 ICON_SIZE=250   # Global Variable to set the image scaling and icon size
 IMAGE_FORMATS= ["BMP","bmp","GIF","gif","JPG","jpg","PEG","peg","PNG","png","IFF","iff","TIF","tif"] #PEG...JPEG and IFF ...TIFF; global variable to identify imagefiles upon drag and drop
 
-def uniDEcode(string): # using utf8 encoding in all strings (better than modifying site.py)
+def uniDEcode(string): # having str everywhere where it is applicable. however None must not be convertet to str.
     if string is None: # should only be the case in db_sync
         return string
-    elif not isinstance(string,unicode) and not isinstance(string,QtCore.QString) and isinstance(string,str):
-        #print("From UTF-8 TO UNICODE")
-        return unicode(string,"utf8")
-    elif isinstance(string, QtCore.QString):
-        #print("__MELDUNG: QString conversion!__")
-        string=string.toUtf8()
-        #print(type(string))
-        return unicode(string,"utf8")
-    elif isinstance(string,unicode):
-        #print("__________found an unicode string oh surprize__________")
-        return string
-    elif isinstance(string,long) or isinstance(string,int):
-        return unicode(string)
     else:
-        print("not handelt string type")
-        print(type(string))
+        return str(string)
         
-def uniENcode(string):
-    if isinstance(string,unicode):
-        return string.encode("utf8")
-    elif isinstance(string, QtCore.QString):
-        string=string.toUtf8()
-        return str(string)
-    elif isinstance(string,long):
-        return str(string)
-    elif isinstance(string, str):
-        return string
-    else:
-        print("you want to get a str from that???")
-        print(type(string))
-
 def file_in_fs_check(proposed_fn): # function that checks whether or not a filename exist in the fs
     while os.path.exists(uniDEcode(os.path.join(uniDEcode(location.pathName), uniDEcode(location.fs_dir), uniDEcode(proposed_fn)))):
-        proposed_fn=QtCore.QString(proposed_fn)
+        proposed_fn=str(proposed_fn)
         name=proposed_fn.split(".")[0]
         ending=proposed_fn.split(".")[1]
         if name[-3] =="_":
@@ -161,15 +141,13 @@ def file_in_fs_check(proposed_fn): # function that checks whether or not a filen
                 if num<10:
                     num="0"+str(num)
                 name=name[:-2]
-                name.append(str(num))
+                name=name+str(num)
             except ValueError:
-                name.append("_01")
+                name=name+"_01"
         else:
-                name.append("_01")    
+                name=name+"_01"
         
-        proposed_fn=name
-        proposed_fn.append(".") 
-        proposed_fn.append(ending)
+        proposed_fn=name+"."+ending
     return uniDEcode(proposed_fn)
     
 def rotate_image(work_image,tags):
@@ -182,10 +160,20 @@ def rotate_image(work_image,tags):
             return work_image
     except KeyError:  # for all those images where there is no orientation EXIF tag
         return work_image
+      
+def scale_image(work_image,w_vsize,h_vsize):
+    p_ratio=float(work_image.size().width())/float(work_image.size().height())
+    v_ratio=float(w_vsize)/float(h_vsize)
+    if v_ratio >= p_ratio:
+        work_image=work_image.scaledToHeight(h_vsize-15)
+    else: #elif v_ratio < p_ratio:
+        work_image=work_image.scaledToWidth(w_vsize-15)
+    
+    return work_image
 
-class StartGui (QtGui.QMainWindow):
+class StartGui (QtWidgets.QMainWindow):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        super(StartGui, self).__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.liwi=ThumbListWidget(self.ui.centralwidget)
@@ -196,23 +184,23 @@ class StartGui (QtGui.QMainWindow):
         self.timer.setInterval(500)
         self.timer.setSingleShot(True)
         
-        self.connect(self.timer,QtCore.SIGNAL("timeout()"), self.update_export_decide) # take it as single click
-        self.connect(self.ui.ImLoad_button, QtCore.SIGNAL("clicked()"),self.ImLoad)
-        self.connect(self.ui.ImClear_button, QtCore.SIGNAL("clicked()"),self.ImClear)
-        self.connect(self.ui.People_comboBox, QtCore.SIGNAL("activated(const QString&)"), self.people2list)
-        self.connect(self.ui.ClearPeopleList_button, QtCore.SIGNAL("clicked()"), self.clear_piwili)
-        self.connect(self.ui.RemovePeople_button, QtCore.SIGNAL("clicked()"), self.remove_single_name)
-        #self.connect(self.liwi,QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.start_viewer) # so richtig fkt die unterscheidung der einfach und doppel klicks nicht (auch bei doppelklick wird in die db eingertragen)
-        #self.connect(self.liwi,QtCore.SIGNAL("itemClicked(QListWidgetItem*)"), self.update_export_decide) #self.update_singleImage)
-        self.connect(self.liwi,QtCore.SIGNAL("itemClicked(QListWidgetItem*)"), self.double_click_detect)
-        self.connect(self.ui.AllInsert_button, QtCore.SIGNAL("clicked()"), self.update_allImages)
-        self.connect(self.ui.SearchDB_button, QtCore.SIGNAL("clicked()"),self.search_btn_DB)
-        self.connect(self.ui.ExportAll_button, QtCore.SIGNAL("clicked()"), self.export_allImages)
-        self.connect(self.ui.dbSync_pushButton, QtCore.SIGNAL("clicked()"), self.db_sync)
-        self.connect(self.liwi, QtCore.SIGNAL("dropped"), self.load_Images)
+        self.timer.timeout.connect(self.update_export_decide)
+        self.ui.ImLoad_button.clicked.connect(self.ImLoad)
+        self.ui.ImClear_button.clicked.connect(self.ImClear)
+        self.ui.People_comboBox.activated[str].connect(self.people2list)
+        self.ui.ClearPeopleList_button.clicked.connect(self.clear_piwili)
+        self.ui.RemovePeople_button.clicked.connect(self.remove_single_name)
+        self.liwi.itemClicked.connect(self.double_click_detect)
+        self.ui.AllInsert_button.clicked.connect(self.update_allImages)
+        self.ui.SearchDB_button.clicked.connect(self.search_btn_DB)
+        self.ui.ExportAll_button.clicked.connect(self.export_allImages)
+        self.ui.dbSync_pushButton.clicked.connect(self.db_sync)
+        self.liwi.fileDropped.connect(self.load_Images)
+#        self.ui.manage_attachment_button.clicked.connect(self.manageAttachments)
         
     def closeEvent(self,event): # close the viewer too if the main window is closed
         viewer.close()
+#        attachman.close()
         event.accept()
     
     def double_click_detect(self): # if no double click then the timer will emmit the timeout() signal and call the single click action (update_export_decide())
@@ -229,16 +217,28 @@ class StartGui (QtGui.QMainWindow):
             self.export_singleImage()
     
     def start_viewer(self):
-        #self.viewer=ViewerDialog() # ob das nicht ins Hauptprogram (ganz unten gehört) und hier nur das show() so kann der dialog nicht mehrmals geöffnet werden
-        #self.viewer.showViewer()
         row=self.liwi.currentRow()
         fileList=[]
         for index in range(row, self.liwi.count()):
-            fileList.append(uniDEcode(self.liwi.item(index).data(32).toString()))
+            fileList.append(str(self.liwi.item(index).data(32)))
         for index in range(row):
-            fileList.append(uniDEcode(self.liwi.item(index).data(32).toString()))
+            fileList.append(str(self.liwi.item(index).data(32)))
         viewer.set_view(fileList)
         viewer.showViewer() #this is the version inititalization in the main prog.
+        
+#    def manageAttachments(self):
+#        row=self.liwi.currentRow()
+#        if row==-1:
+#            row=0
+#        fileList=[]
+#        md5list=[]
+#        for index in range(self.liwi.count()):
+#            fileList.append(str(self.liwi.item(index).data(32)))
+#            md5=self.liwi.item(index).toolTip()
+#            md5=uniDEcode(md5.split("<")[0])
+#            md5list.append(uniDEcode(md5))
+#        attachman.setFiledisplay(fileList,md5list,row)
+#        attachman.showManager()
     
     def ImLoad(self):
         """ This method is called by clicking on the "load images" button. It loads the 
@@ -247,16 +247,17 @@ class StartGui (QtGui.QMainWindow):
             happens) or if its is even loaded (not going to be loaded twice) (the last part
             is moved to a new function def load_Images(fileNames) to be able to implement 
             drag and drop features """
-        fileNames = QtGui.QFileDialog.getOpenFileNames(self,
-         self.tr("Load Image(s)"), "", self.tr("Image files (*.png *.jpg *.bmp *.tif)"))
+        fileNames = QtWidgets.QFileDialog.getOpenFileNames(self,
+         self.tr("Load Image(s)"), "", self.tr("Image files (*.png *.jpg *.bmp *.tif)"))[0]
         #insert check for image filenames - i don't think this is necessary because only imagefiles are presented for selection
         fileNames.sort()
         self.load_Images(fileNames) 
 
     def load_Images(self,fileNames):
         for fileName in fileNames:  
-            fs_fname=QtCore.QString("")
-            self.liwiit=QtGui.QListWidgetItem() # ob das ein self sein muss?
+            fs_fname=str("")
+            fs_fname_list=list([])
+            self.liwiit=QtWidgets.QListWidgetItem() # ob das ein self sein muss?
     
             im_file=open(uniDEcode(fileName),'rb')
             imdata=im_file.read()
@@ -265,15 +266,16 @@ class StartGui (QtGui.QMainWindow):
             im_file.seek(0)
             tags = EXIF.process_file(im_file, details=False)
             day=datetime.date.today()
-            fs_fname.append(str(day))
-            fs_fname.replace("-","")
-            fs_fname.append("_")
-            fs_fname.append(os.path.split(os.path.split(os.path.split(uniDEcode(fileName))[0])[0])[1])
-            fs_fname.append("_")
-            fs_fname.append(os.path.split(os.path.split(uniDEcode(fileName))[0])[1])
-            fs_fname.append("_")
-            fs_fname.append(os.path.split(uniDEcode(fileName))[1])
+            fs_fname_list.append(str(day).replace("-",""))
+            #fs_fname.replace("-","")
+            fs_fname_list.append("_")
+            fs_fname_list.append(os.path.split(os.path.split(os.path.split(uniDEcode(fileName))[0])[0])[1])
+            fs_fname_list.append("_")
+            fs_fname_list.append(os.path.split(os.path.split(uniDEcode(fileName))[0])[1])
+            fs_fname_list.append("_")
+            fs_fname_list.append(os.path.split(uniDEcode(fileName))[1])
             # following: an insurance against overwriting files in the filesystem
+            fs_fname=fs_fname.join(fs_fname_list)
             fs_fname=file_in_fs_check(fs_fname)
                            
             self.Image=SingleIm(uniDEcode(hs.hexdigest()),fileName,fs_fname) #Constructor of Single Image; TODO sollte das nicht erst dann erfolgen, wenn sichergestellt ist, dass das image noch nicht geladen ist (in den untenstehenden if und elif stmts) Nicht notwendig oder nützlich/ this todo questions the place in the code for this constructor; conclusion this place seems right
@@ -298,7 +300,7 @@ class StartGui (QtGui.QMainWindow):
                 self.Image.db_insert()
                 copy2(uniDEcode(fileName),uniDEcode(os.path.join(uniDEcode(location.pathName), uniDEcode(location.fs_dir), uniDEcode(self.Image.fs_filename)))) # file copied to the DB filesystem
        
-            elif row and not self.Image.md5check in self.md5TOimdata.keys(): # image in db but not shown in window -> show it (and all its metadata)
+            elif row and not self.Image.md5check in list(self.md5TOimdata.keys()): # image in db but not shown in window -> show it (and all its metadata)
                 self.set_statusbar(uniDEcode(self.tr("Picture already in database, loading to display")))
                 
                 self.Image.cksum=row[0][0]
@@ -354,7 +356,6 @@ class StartGui (QtGui.QMainWindow):
         self.ui.Author_cb.clear()
         self.ui.People_comboBox.clear()
         self.ui.Comment_cb.clear()
-        self.ui.CommentInput_text.clear()
         years=master_db.search_distinct({"year":"images"})
         years.insert(0,"")
         self.ui.year_comboBox.addItems(years)
@@ -378,9 +379,10 @@ class StartGui (QtGui.QMainWindow):
         comments_li=master_db.search_distinct({"comment":"images"})
         com_cb_li=[""]
         for comment_str in comments_li:
-            com_li=QtCore.QString(comment_str).split(";",QtCore.QString.SkipEmptyParts)
+            com_li=str(comment_str).split(";")
+            com_li=[_f for _f in com_li if _f]
             for com in com_li:
-                com=com.trimmed()
+                com=com.strip()
                 if not com in com_cb_li:
                     com_cb_li.append(com)
         com_cb_li.sort()
@@ -440,7 +442,7 @@ class StartGui (QtGui.QMainWindow):
         if name.count(";") is 2:
             if not self.ui.people_listWidget.findItems(name,QtCore.Qt.MatchExactly) or not\
                     self.ui.people_listWidget.findItems(name.replace("'","`"),QtCore.Qt.MatchExactly):
-                piliwiit=QtGui.QListWidgetItem()
+                piliwiit=QtWidgets.QListWidgetItem()
                 piliwiit.setText(name.replace("'","`"))
                 self.ui.people_listWidget.addItem(piliwiit)
             if self.ui.People_comboBox.findText(self.ui.People_comboBox.\
@@ -498,7 +500,7 @@ class StartGui (QtGui.QMainWindow):
         return auth_ok
 
     def export_allImages(self):
-        export_dir=QtGui.QFileDialog.getExistingDirectory(self, uniDEcode(self.tr("Export Folder")), "")
+        export_dir=QtWidgets.QFileDialog.getExistingDirectory(self, uniDEcode(self.tr("Export Folder")), "")
         if export_dir:
             for row in range(self.liwi.count()):
                 item=self.liwi.item(row)
@@ -509,7 +511,7 @@ class StartGui (QtGui.QMainWindow):
             self.set_statusbar(uniDEcode(self.tr("Export failed: Ready")))
 
     def export_singleImage(self):
-        export_dir=QtGui.QFileDialog.getExistingDirectory(self, uniDEcode(self.tr("Export Folder")), "")
+        export_dir=QtWidgets.QFileDialog.getExistingDirectory(self, uniDEcode(self.tr("Export Folder")), "")
 
         if export_dir:
             item=self.liwi.currentItem()
@@ -529,14 +531,14 @@ class StartGui (QtGui.QMainWindow):
          uniDEcode(self.md5TOimdata[md5].fs_filename))
  
         copy2(src_f,dst_f)
-        meta_fn=QtCore.QString(self.md5TOimdata[md5].fs_filename.split(".")[0])
-        meta_fn.append(".txt")
+        meta_fn=str(self.md5TOimdata[md5].fs_filename.split(".")[0])
+        meta_fn=meta_fn+".txt"
         meta_fn=os.path.join(uniDEcode(export_dir),uniDEcode(meta_fn))
-        tt.replace("<br>","\n")
-        tt.replace("<i>","")
-        tt.replace("</i>","")
-        tt.replace("&nbsp;"," ")
-        tt.append("\n")
+        tt=tt.replace("<br>","\n")
+        tt=tt.replace("<i>","")
+        tt=tt.replace("</i>","")
+        tt=tt.replace("&nbsp;"," ")
+        tt=tt+"\n"
         f = open(meta_fn,'w')
         f.write(tt)
         f.close()
@@ -569,9 +571,9 @@ class StartGui (QtGui.QMainWindow):
         if not rows:
             self.set_statusbar(self.tr("Your search parameters did not fit for any picture in the database"))
         for row in rows:
-            if not row[1] in self.md5TOimdata.keys(): 
+            if not row[1] in list(self.md5TOimdata.keys()): 
                 self.set_statusbar(row[7])
-                self.liwiit=QtGui.QListWidgetItem()
+                self.liwiit=QtWidgets.QListWidgetItem()
                 self.Image=SingleIm(row[1],row[8],row[7])
                 self.Image.cksum=row[0]
                 self.Image.people_check=row[9]
@@ -611,11 +613,11 @@ class StartGui (QtGui.QMainWindow):
                 self.liwi.addItem(self.liwiit)
         if rows:    
             self.set_statusbar(self.tr("Search finished: Ready"))
-    
+            
 
     def db_sync(self): # major feature of the program: comparison of two image databases and appending data to the allready loaded db, the sync db remains unchanged
     # die funktion zum synchronisieren von zwei datenbanken, der bereits geladenen master_db und einer neuen.
-        fileName = QtGui.QFileDialog.getOpenFileName(self, uniDEcode(self.tr("Open database")), "", self.tr("Database (*.sqlite)"));
+        fileName = QtWidgets.QFileDialog.getOpenFileName(self, uniDEcode(self.tr("Open database")), "", self.tr("Database (*.sqlite)"))[0]
         
         if uniDEcode(fileName) == os.path.join(uniDEcode(location.pathName),uniDEcode(location.fName)):
             self.set_statusbar(uniDEcode(self.tr("Selected database and current database are identical, select another one."))) 
@@ -668,85 +670,86 @@ class StartGui (QtGui.QMainWindow):
                     if people_check:
                         people_check=uniDEcode(people_check)
                         up_dic["people_checksum"]=people_check
-                        people_check=uniENcode(people_check)
-                        cksum=adler32(people_check,cksum)&0xffffffff
+                        cksum=adler32(people_check.encode(),cksum)&0xffffffff
                         
                     
-                    cksum=adler32(smd5,cksum)&0xffffffff
+                    cksum=adler32(smd5.encode(),cksum)&0xffffffff
                     
                     if m_row[3] is None and not s_row[3] is None:
                         up_dic["e_name"]=s_row[3]
-                        cksum=adler32(uniENcode(s_row[3]),cksum)&0xffffffff
+                        cksum=adler32(s_row[3].encode(),cksum)&0xffffffff
                     elif not m_row[3] is None:
-                        cksum=adler32(uniENcode(m_row[3]),cksum)&0xffffffff
+                        cksum=adler32(m_row[3].encode(),cksum)&0xffffffff
                         
                     if m_row[10] is None and not s_row[10] is None:
                         up_dic["e_type"]=s_row[10]
-                        cksum=adler32(uniENcode(s_row[10]),cksum)&0xffffffff
+                        cksum=adler32(s_row[10].encode(),cksum)&0xffffffff
                     elif not m_row[10] is None:
-                        cksum=adler32(uniENcode(m_row[10]),cksum)&0xffffffff
+                        cksum=adler32(m_row[10].encode(),cksum)&0xffffffff
                         
                     if m_row[11] is None and not s_row[11] is None:
                         up_dic["e_loc"]=s_row[11]
-                        cksum=adler32(uniENcode(s_row[11]),cksum)&0xffffffff
+                        cksum=adler32(s_row[11].encode(),cksum)&0xffffffff
                     elif not m_row[11] is None:
-                        cksum=adler32(uniENcode(m_row[11]),cksum)&0xffffffff
+                        cksum=adler32(m_row[11].encode(),cksum)&0xffffffff
 
                     if m_row[4] is None and not s_row[4] is None:
                         up_dic["author"]=s_row[4]
-                        cksum=adler32(uniENcode(s_row[4]),cksum)&0xffffffff
+                        cksum=adler32(s_row[4].encode(),cksum)&0xffffffff
                     elif not m_row[4] is None:
-                        cksum=adler32(uniENcode(m_row[4]),cksum)&0xffffffff
+                        cksum=adler32(m_row[4].encode(),cksum)&0xffffffff
                     
                     if m_row[2] is None and not s_row[2] is None:
                         up_dic["year"]=s_row[2]
-                        cksum=adler32(uniENcode(s_row[2]),cksum)&0xffffffff
+                        cksum=adler32(s_row[2].encode(),cksum)&0xffffffff
                     elif not m_row[2] is None:
-                        cksum=adler32(uniENcode(m_row[2]),cksum)&0xffffffff
+                        cksum=adler32(m_row[2].encode(),cksum)&0xffffffff
                     
                     if s_row[5]:
-                        s_com_li=QtCore.QString(s_row[5]).split("; ",QtCore.QString.SkipEmptyParts)
+                        s_com_li=str(s_row[5]).split("; ")
+                        s_com_li=[_f for _f in s_com_li if _f]
                         if m_row[5]:
-                            m_com_li=QtCore.QString(m_row[5]).split("; ",QtCore.QString.SkipEmptyParts)
+                            m_com_li=str(m_row[5]).split("; ")
+                            m_com_li=[_f for _f in m_com_li if _f]
                         else:
-                            m_com_li=QtCore.QStringList()
+                            m_com_li=list()
                                                      
                         for s_com in s_com_li:
                             if s_com not in m_com_li: #and s_com is not unicode(""):
                                 m_com_li.append(s_com)
                         
-                        m_com_str=m_com_li.join(";")
+                        m_com_str=(";").join(m_com_li)
                         #print(m_com_str)
-                        m_com_str.append(";")
+                        m_com_str=m_com_str+";"
                         #print(m_com_str)
-                        m_com_str.replace("; ",";")
+                        m_com_str=m_com_str.replace("; ",";")
                         #print(m_com_str)
-                        m_com_str.replace(";","; ")
+                        m_com_str=m_com_str.replace(";","; ")
                         #print(m_com_str)
                         up_dic["comment"]=m_com_str
-                        cksum=adler32(uniENcode(m_com_str),cksum)&0xffffffff
+                        cksum=adler32(m_com_str.encode(),cksum)&0xffffffff
                         
                     elif m_row[5]:
-                        cksum=adler32(uniENcode(m_row[5]),cksum)&0xffffffff
+                        cksum=adler32(m_row[5].encode(),cksum)&0xffffffff
                     
                     #if people_check:
                         
                      #   cksum=adler32(people_check,cksum)&0xffffffff
                     
-                    up_dic["chksum"]=uniDEcode(cksum)
+                    up_dic["chksum"]=str(cksum)
                     master_db.update_table(smd5,up_dic)
                 
                 elif not smd5 in mli:  # file not in master db 
                     sync_db.curs.execute("SELECT * from images WHERE md5=?",(smd5,))
                     s_row=sync_db.curs.fetchone()
-                    name_in_master=uniENcode(file_in_fs_check(s_row[7]))
+                    name_in_master=str(file_in_fs_check(s_row[7]))
                     sync_db.curs.execute("SELECT pers from Im2People WHERE md5=?",(smd5,))
                     s_prows=sync_db.curs.fetchall()
                     
                     master_db.curs.execute("insert into images (chksum, md5, year, event, author, comment, relPath, fileName, sourceFileName, people_checksum, future1, future2) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (uniDEcode(s_row[0]),uniDEcode(s_row[1]),uniDEcode(s_row[2]),uniDEcode(s_row[3]), uniDEcode(s_row[4]),uniDEcode(s_row[5]), uniDEcode(location.fs_dir),uniDEcode(name_in_master),uniDEcode(s_row[8]),uniDEcode(s_row[9]),uniDEcode(s_row[10]),uniDEcode(s_row[11]),))
                     master_db.con.commit()
                     
-                    fn_src=os.path.split(uniENcode(fileName))[0]
+                    fn_src=os.path.split(str(fileName))[0]
                     copy2(uniDEcode(os.path.join(fn_src,s_row[6],s_row[7])),uniDEcode(os.path.join(uniDEcode(location.pathName), uniDEcode(location.fs_dir), uniDEcode(name_in_master))))
                     pili=[]
                     for name in s_prows:
@@ -764,37 +767,41 @@ class StartGui (QtGui.QMainWindow):
         self.ui.statusbar.showMessage(uniDEcode(message),t)
                
 
-class StartDialog (QtGui.QDialog):
+class StartDialog (QtWidgets.QDialog):
     """StartDialog is a Dialog window which forces the user to eiter choose an
        existent db or create a new one. this should prevent working without db,
        which is btw not possible at all and causes an ERROR""" 
     def __init__(self, parent=None): 
-        QtGui.QWidget.__init__(self, parent)
+        super(StartDialog, self).__init__(parent)
         self.startDia=Ui_Dialog() 
         self.startDia.setupUi(self)
-        self.connect(self.startDia.Start_newDB_botton,QtCore.SIGNAL("clicked()"), self.newDB)
-        self.connect(self.startDia.Start_existingDB_button,QtCore.SIGNAL("clicked()"),self.existingDB)
+        self.startDia.Start_newDB_botton.clicked.connect(self.newDB)
+        self.startDia.Start_existingDB_button.clicked.connect(self.existingDB)
 
 
     def newDB(self):
-        fileName = QtGui.QFileDialog.getSaveFileName(self,self.tr("Save database as"),"", self.tr("Database (*.sqlite)"));
+        fileName = QtWidgets.QFileDialog.getSaveFileName(self,self.tr("Save database as"),"", self.tr("Database (*.sqlite)"))[0]
 
         if fileName:
             location.addpathname(os.path.split(uniDEcode(fileName))[0])
-            self.fN=QtCore.QString(os.path.split(uniDEcode(fileName))[1]) 
-            self.fN=self.fN.trimmed()
+            self.fN=str(os.path.split(uniDEcode(fileName))[1]) 
+            self.fN=self.fN.strip()
     
-            if self.fN.endsWith(".sqlite",0):   #prüft ohne case sensitivity auf endung "sqlite"
-                if self.fN.endsWith("sqlite",1):  #alles kleingeschrieben?
-                    pass                             # ja: ok
-                else:                              #nein: der schwanz wird abgeschnitten und durch 
-                    self.fN.chop(6)                 # die kleingeschrieben variante ersetzt 
-                    self.fN.append("sqlite")
+            if self.fN.endswith(".sqlite") or self.fN.endswith(".Sqlite") or self.fN.endswith(".SQLITE"):   #prüft ohne case sensitivity auf endung "sqlite"
+                self.fN=self.fN.split(".")[0]    #replace ending with lowercase ending
+                self.fN=self.fN+".sqlite"
+
+#                if self.fN.endswith("sqlite"):  #alles kleingeschrieben?
+#                    pass                             # ja: ok
+#                else:                              #nein: der schwanz wird abgeschnitten und durch 
+#                                  # die kleingeschrieben variante ersetzt 
+#                    self.fN=self.fN.split(".")[0]
+#                    self.fN=self.fN+"sqlite"
             else:                               #keine endung auf sqlite vorhanden -> wird angefügt
-                self.fN.append(".sqlite")
+                self.fN=self.fN+"sqlite"
 
             location.addfilename(self.fN)
-            statusbar_db_label=QtGui.QLabel()
+            statusbar_db_label=QtWidgets.QLabel()
             statusbar_db_label.setText(self.fN)
             myapp.ui.statusbar.addPermanentWidget(statusbar_db_label)
             location.addfs_dir(self.fN.split(".")[0])
@@ -806,17 +813,17 @@ class StartDialog (QtGui.QDialog):
             myapp.set_statusbar(self.tr("New database created: Ready"))
 
     def existingDB(self):
-        fileName = QtGui.QFileDialog.getOpenFileName(self, uniDEcode(self.tr("Open database")), "", self.tr("Database (*.sqlite)"));
-
+        fileName = QtWidgets.QFileDialog.getOpenFileName(self, uniDEcode(self.tr("Open database")), "", self.tr("Database (*.sqlite)"))[0]
+        print(fileName)
         if fileName:
             location.pathName=os.path.split(uniDEcode(fileName))[0] #[0:fileName.lastIndexOf("/")+1]
             
-            fN=QtCore.QString(os.path.split(uniDEcode(fileName))[1]) 
+            fN=str(os.path.split(uniDEcode(fileName))[1]) 
             location.fName=fN
             #print(location.fName)
             location.fs_dir=fN.split(".")[0]
             #print(location.fName)
-            statusbar_db_label=QtGui.QLabel()
+            statusbar_db_label=QtWidgets.QLabel()
             statusbar_db_label.setText(fN)
             myapp.ui.statusbar.addPermanentWidget(statusbar_db_label)
             cur_ok=master_db.get_cur(fileName)
@@ -831,49 +838,37 @@ class StartDialog (QtGui.QDialog):
         self.done(42)   # der trick beim schließen des dialogs ist es irgendeine(?) zahl zu übergeben, bestimmt den result wert
 
 
-class ViewerDialog(QtGui.QDialog):
+class ViewerDialog(QtWidgets.QDialog):
     """provides the interface to the integrated image viewer invoked by double
        clicking on images. It is heavily influenced by a code (unknown lincense) posted by Vincent Vande Vyvre <vins@swing.be>"""
        
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent, QtCore.Qt.CustomizeWindowHint | QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowCloseButtonHint)
+        super(ViewerDialog, self).__init__(parent, QtCore.Qt.CustomizeWindowHint | QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowCloseButtonHint)
         self.Vui=Ui_Viewer()
         self.Vui.setupUi(self)
-        self.scene = QtGui.QGraphicsScene()
+        self.scene = QtWidgets.QGraphicsScene()
         self.scene.setBackgroundBrush(QtCore.Qt.black)
-        self.view=QtGui.QGraphicsView(self.scene) 
+        self.view=QtWidgets.QGraphicsView(self.scene) 
         self.view.setLineWidth(0)
-        self.view.setFrameShadow(QtGui.QFrame.Plain)
+        self.view.setFrameShadow(QtWidgets.QFrame.Plain)
         self.Vui.horizontalLayout_2.addWidget(self.view)
         QtCore.QCoreApplication.processEvents()
         
-        self.connect(self.Vui.pushButton, QtCore.SIGNAL("clicked()"), self.prev)
-        self.connect(self.Vui.pushButton_2, QtCore.SIGNAL("clicked()"), self.next)
-        self.connect(self.Vui.pushButton_3, QtCore.SIGNAL("clicked()"), self.close)
+        self.Vui.pushButton.clicked.connect(self.prev)
+        self.Vui.pushButton_2.clicked.connect(self.next_pic)
+        self.Vui.pushButton_3.clicked.connect(self.close)
         
         self.Vui.widget.wheelEvent = self.wheel_event
         self.Vui.widget.resizeEvent=self.resize_event
         self.Vui.widget.keyPressEvent=self.key_event
         
+        self.imagePresentation=singleImageView()
+        
     def set_view(self,Im_file_list):
-        self.images=Im_file_list 
-        self.zoom_step = 0.04
         self.w_vsize = self.view.size().width() 
         self.h_vsize = self.view.size().height() 
-        """if self.w_vsize <= self.h_vsize:
-            self.max_vsize = self.w_vsize
-        else:
-            self.max_vsize = self.h_vsize"""
-        self.l_pix = ["", "", ""]
-        
-        self.i_pointer = 0
-        self.p_pointer = 0
-        self.load_current()
-        self.p_pointer = 1
-        self.load_next()
-        self.p_pointer = 2
-        self.load_prec()
-        self.p_pointer = 0
+        self.imagePresentation.setView(Im_file_list,self.w_vsize,self.h_vsize)
+        self.view_current()
         
     def wheel_event (self, event):
         numDegrees = event.delta() / 8.0
@@ -886,15 +881,11 @@ class ViewerDialog(QtGui.QDialog):
         tags={}
         tags['Image Orientation']=fake_Tags()
         if key == QtCore.Qt.Key_L:
-            tags['Image Orientation'].printable="Rotated 90 CCW"
-            self.l_pix[self.p_pointer]=rotate_image(self.l_pix[self.p_pointer],tags)
-            self.c_view=self.scale_image(self.l_pix[self.p_pointer]) # tags is a dict of objects
+            self.imagePresentation.rotate_left()
             self.view_current()
             event.accept()
         elif key == QtCore.Qt.Key_R:
-            tags['Image Orientation'].printable="Rotated 90 CW"
-            self.l_pix[self.p_pointer]=rotate_image(self.l_pix[self.p_pointer],tags)
-            self.c_view=self.scale_image(self.l_pix[self.p_pointer])
+            self.imagePresentation.rotate_right()
             self.view_current()
             event.accept()
         else:
@@ -903,53 +894,180 @@ class ViewerDialog(QtGui.QDialog):
     def resize_event(self, event): 
         self.w_vsize = self.view.size().width() 
         self.h_vsize = self.view.size().height() 
-        """if self.w_vsize <= self.h_vsize:
-            self.max_vsize = self.w_vsize
-        else:
-            self.max_vsize = self.h_vsize"""
-        #print(self.p_pointer)
-        if self.p_pointer is 0:
-            self.np_pointer=1
-            self.pp_pointer=2
-        elif self.p_pointer is 1:
-            self.np_pointer=2
-            self.pp_pointer=0
-        else:
-            self.np_pointer=0
-            self.pp_pointer=1
-        """self.c_view=self.l_pix[self.p_pointer].scaled(self.max_vsize, self.max_vsize, 
-                                            QtCore.Qt.KeepAspectRatio, 
-                                            QtCore.Qt.FastTransformation)"""
-        self.c_view=self.scale_image(self.l_pix[self.p_pointer])
+        self.imagePresentation.resize(self.h_vsize,self.w_vsize)
         self.view_current()
-        
-        """"self.n_view=self.l_pix[self.np_pointer].scaled(self.max_vsize, self.max_vsize, 
-                                            QtCore.Qt.KeepAspectRatio, 
-                                            QtCore.Qt.FastTransformation)"""
-        self.n_view=self.scale_image(self.l_pix[self.np_pointer])
-        """self.p_view=self.l_pix[self.pp_pointer].scaled(self.max_vsize, self.max_vsize, 
-                                            QtCore.Qt.KeepAspectRatio, 
-                                            QtCore.Qt.FastTransformation)"""
-        self.p_view=self.scale_image(self.l_pix[self.pp_pointer])
         event.accept()
                 
     def zoom(self, step):
         self.scene.clear()
-        w = self.c_view.size().width()
-        h = self.c_view.size().height()
-        w, h = w * (1 + self.zoom_step*step), h * (1 + self.zoom_step*step)
-        self.c_view = self.l_pix[self.p_pointer].scaled(w, h, 
-                                            QtCore.Qt.KeepAspectRatio, 
-                                            QtCore.Qt.FastTransformation)
+        self.imagePresentation.zoom(step)
         self.view_current()
         
-    def next(self):
+    def next_pic(self):
+        self.imagePresentation.next_pic()
+        self.view_current()
+
+    def prev(self):
+        self.imagePresentation.prev()
+        self.view_current()
+
+       
+    def view_current(self): 
+        image=self.imagePresentation.get_current_image()
+        size_img = image.size()
+        wth, hgt = QtCore.QSize.width(size_img), QtCore.QSize.height(size_img)
+        self.scene.clear()
+        self.scene.setSceneRect(0, 0, wth, hgt)
+        self.scene.addPixmap(QtGui.QPixmap(image)) # QImage to QPixmap conversion
+        QtCore.QCoreApplication.processEvents()
+    
+    def showViewer(self):
+        self.show()
+        self.raise_()
+
+    def close(self):
+        self.hide()
+
+#class AttachDialog(QtWidgets.QDialog):
+#    """provides interface to attached zip files."""
+#    def __init__(self, parent=None):
+#        super(AttachDialog, self).__init__(parent)
+#        self.Aui=Ui_AttDialog()
+#        self.Aui.setupUi(self)
+#        self.scene=QtWidgets.QGraphicsScene()
+#        self.scene.setBackgroundBrush(QtCore.Qt.black)
+#        self.Aui.att_graphicsView.setScene(self.scene)
+#        
+#        self.attFileList=[] # list of files for the attachment (contains existing files in attachment and future attachments)
+#                            # sollte gleich liste der klasse attachzipfile sein (also die file liste gleich dort anlegen
+#                            # das muss aber dann an einer anderen stelle erfolgen, da ich für jedes bild separat so eine liste brauche,
+#                            # ev. in view current
+#                            # oder ich mache zuerst hier eine instanz und dann bei zB view current rufe ich eine methode
+#                            # um die liste zu generieren oder zu speichern.
+#        #self.connect(self.Aui.att_add_file_butt, QtCore.SIGNAL("clicked()"), self.addFile)
+#        self.Aui.att_add_file_butt.clicked.connect(self.addFile)
+#        #self.connect(self.Aui.att_rm_file_butt, QtCore.SIGNAL("clicked()"), self.rmFile)
+#        self.Aui.att_rm_file_butt.clicked.connect(self.rmFile)
+##        self.connect(self.Aui.att_exp_file_butt, QtCore.SIGNAL("clicked()"), self.exportFile)
+##        self.connect(self.Aui.att_write_butt, QtCore.SIGNAL("clicked()"), self.write)
+#        self.connect(self.Aui.write_and_close_butt, QtCore.SIGNAL("clicked()"), self.writeAndClose)
+#        #self.connect(self.Aui.att_close_butt, QtCore.SIGNAL("clicked()"), self.close)
+#        self.Aui.att_close_butt.clicked.connect(self.close)
+#        #self.connect(self.Aui.att_horizontalSlider, QtCore.SIGNAL("sliderReleased()"), self.slider)
+#        self.Aui.att_horizontalSlider.sliderReleased.connect(self.slider)
+#        #self.connect(self.Aui.att_prev_img_button, QtCore.SIGNAL("clicked()"), self.prev)
+#        self.Aui.att_prev_img_button.clicked.connect(self.prev)
+#        #self.connect(self.Aui.att_next_img_button, QtCore.SIGNAL("clicked()"), self.next)
+#        self.Aui.att_next_img_button.clicked.connect(self.next_pic)
+#        
+#        self.imagePresentation=singleImageView()
+#        
+#    def write(self):
+#        # write files to zip file, create instance of attachZipFile and there a zip file if it is not here already
+#        pass
+#        
+#    def setFiledisplay(self,filelist,md5list,row=0): # use to get the list of image to display in the img view window and set slider length
+#        self.imageList=filelist
+#        self.md5list=md5list
+#        self.imagePresentation.setView(self.imageList, self.Aui.att_graphicsView.size().width(),
+#                                       self.Aui.att_graphicsView.size().height(),row)
+#        self.Aui.att_horizontalSlider.setMaximum(len(self.imageList)-1)
+#        self.Aui.att_horizontalSlider.setValue(row)
+#        self.view_current()
+#        
+#    def view_current(self):
+#        image=self.imagePresentation.get_current_image()
+#        size_img = image.size()
+#        wth, hgt = QtCore.QSize.width(size_img), QtCore.QSize.height(size_img)
+#        self.scene.clear()
+#        self.scene.setSceneRect(0, 0, wth, hgt)
+#        self.scene.addPixmap(QtGui.QPixmap(image)) # QImage to QPixmap conversion
+#        QtCore.QCoreApplication.processEvents()
+#        
+#    def next_pic(self):
+#        self.imagePresentation.next_pic()
+#        sliderPosition=self.Aui.att_horizontalSlider.value()+1
+#        if sliderPosition==len(self.imageList):
+#            sliderPosition=0
+#        self.Aui.att_horizontalSlider.setValue(sliderPosition)
+#        self.view_current()
+#        # check if cb write to db -> write attachments to file and checksum to db
+#        # in any case clear attach file list and list widget
+#
+#    def prev(self):
+#        self.imagePresentation.prev()
+#        sliderPosition=self.Aui.att_horizontalSlider.value()-1
+#        if sliderPosition < 0:
+#            sliderPosition=len(self.imageList)-1
+#        self.Aui.att_horizontalSlider.setValue(sliderPosition)
+#        self.view_current()
+#        # check if cb write to db -> write attachments to file and checksum to db
+#        # in any case clear attach file list and list widget
+#
+#    def slider(self):
+#        self.imagePresentation.setView(self.imageList, self.Aui.att_graphicsView.size().width(),
+#                                       self.Aui.att_graphicsView.size().height(),
+#                                       self.Aui.att_horizontalSlider.value())
+#        self.view_current()
+#        # check if cb write to db -> write attachments to file and checksum to db
+#        # in any case clear attach file list and list widget
+#    
+#    def addFile(self):
+#        fileNames = QtWidgets.QFileDialog.getOpenFileNames (self, self.tr("Load Attachment(s)"), 
+#         self.tr("Any file (*.*)"))[0]
+#        fileNames.sort()
+#        for fileName in fileNames:
+#            if uniDEcode(fileName) not in self.attFileList:
+#                self.att_file_list_wid_it=QtWidgets.QListWidgetItem()
+#                self.att_file_list_wid_it.setToolTip(uniDEcode(fileName))
+#                self.attFileList.append(uniDEcode(fileName))
+#                self.attFileList.sort()
+#                dummy, fileName = os.path.split(uniDEcode(fileName))
+#                self.att_file_list_wid_it.setText(fileName)
+#                self.Aui.att_file_list_wid.addItem(self.att_file_list_wid_it)
+#                # do not forget to check if files are valid (not zip file it self nor database)
+#                
+#
+#    def rmFile(self):
+#        nix=self.Aui.att_file_list_wid.takeItem(self.Aui.att_file_list_wid.currentRow())
+#        self.attFileList.remove(uniDEcode(nix.toolTip()))
+#        
+#    def showManager(self):
+#        self.show()
+#        self.raise_()
+#        
+#    def close(self):
+#        self.hide()
+        
+class singleImageView(object):
+    # contrains all methods needed for single image display windows/dialogs (e.g. viewer, attachment manager)
+    # provides manipulating images, resizing, zooming, rotating,
+    #         setting the view, viewing the current image, preloading the next or previous in the list
+    
+    def setView(self,filelist, scene_width, scene_height, row=0):
+        # gets file list, scene size, position of current image in list (row)
+        # row corresponds to i_pointer from Viewer dialog
+        self.images=filelist
+        self.w_vsize=scene_width
+        self.h_vsize=scene_height
+        self.i_pointer = row
+        self.zoom_step = 0.04
+        self.l_pix = ["", "", ""]
+
+        self.p_pointer = 0
+        self.load_current()
+        self.p_pointer = 1
+        self.load_next()
+        self.p_pointer = 2
+        self.load_prec()
+        self.p_pointer = 0
+        
+    def next_pic(self):
         self.i_pointer += 1
         if self.i_pointer == len(self.images):
             self.i_pointer = 0
         self.p_view = self.c_view
         self.c_view = self.n_view
-        self.view_current()
         if self.p_pointer == 0:
             self.p_pointer = 2
             self.load_next()
@@ -969,7 +1087,6 @@ class ViewerDialog(QtGui.QDialog):
             self.i_pointer = len(self.images)-1
         self.n_view = self.c_view
         self.c_view = self.p_view
-        self.view_current()
         if self.p_pointer == 0:
             self.p_pointer = 1
             self.load_prec()
@@ -982,30 +1099,13 @@ class ViewerDialog(QtGui.QDialog):
             self.p_pointer = 0
             self.load_prec()
             self.p_pointer = 1
-
-       
-    def view_current(self):
-        size_img = self.c_view.size()
-        wth, hgt = QtCore.QSize.width(size_img), QtCore.QSize.height(size_img)
-        self.scene.clear()
-        self.scene.setSceneRect(0, 0, wth, hgt)
-        self.scene.addPixmap(QtGui.QPixmap(self.c_view)) # QImage to QPixmap conversion
-        QtCore.QCoreApplication.processEvents()
-
+            
     def load_current(self):
         f=open(self.images[self.i_pointer], 'rb')  # according to EXIF.py
         tags = EXIF.process_file(f, details=False)
         f.close()
         self.l_pix[self.p_pointer]=rotate_image(QtGui.QImage(self.images[self.i_pointer]),tags) # QImage as working class
-        
-        #self.p_width=self.l_pix[self.p_pointer].size().width()
-        #self.p_height=self.l_pix[self.p_pointer].size().height()
-        self.c_view=self.scale_image(self.l_pix[self.p_pointer])
-        """self.c_view = self.l_pix[self.p_pointer].scaled(self.max_vsize, self.max_vsize, 
-                                            QtCore.Qt.KeepAspectRatio, 
-                                            QtCore.Qt.FastTransformation)"""
-        #change the previous line with QtCore.Qt.SmoothTransformation eventually
-        self.view_current()
+        self.c_view=scale_image(self.l_pix[self.p_pointer],self.w_vsize,self.h_vsize)
         
     def load_next(self):
         if self.i_pointer == len(self.images)-1:
@@ -1016,11 +1116,7 @@ class ViewerDialog(QtGui.QDialog):
         tags = EXIF.process_file(f, details=False)
         f.close()
         self.l_pix[self.p_pointer] = rotate_image(QtGui.QImage(self.images[p]),tags)
-        self.n_view=self.scale_image(self.l_pix[self.p_pointer])
-        """self.n_view = self.l_pix[self.p_pointer].scaled(self.max_vsize, 
-                                            self.max_vsize, 
-                                            QtCore.Qt.KeepAspectRatio, 
-                                            QtCore.Qt.FastTransformation)"""
+        self.n_view=scale_image(self.l_pix[self.p_pointer],self.w_vsize,self.h_vsize)
 
     def load_prec(self):
         if self.i_pointer == 0:
@@ -1031,45 +1127,101 @@ class ViewerDialog(QtGui.QDialog):
         tags = EXIF.process_file(f, details=False)
         f.close()
         self.l_pix[self.p_pointer]=rotate_image(QtGui.QImage(self.images[p]),tags)
-        self.p_view=self.scale_image(self.l_pix[self.p_pointer])
-        """self.p_view = self.l_pix[self.p_pointer].scaled(self.max_vsize, 
-                                            self.max_vsize, 
-                                            QtCore.Qt.KeepAspectRatio, 
-                                            QtCore.Qt.FastTransformation)"""
+        self.p_view=scale_image(self.l_pix[self.p_pointer],self.w_vsize,self.h_vsize)
     
-    def scale_image(self, work_image):
-        p_ratio=float(work_image.size().width())/float(work_image.size().height())
-        v_ratio=float(self.w_vsize)/float(self.h_vsize)
-        if v_ratio >= p_ratio:
-            work_image=work_image.scaledToHeight(self.h_vsize-15)
-        else: #elif v_ratio < p_ratio:
-            work_image=work_image.scaledToWidth(self.w_vsize-15)
+    def get_current_image(self):
+        return self.c_view
+      
+    def resize(self,height,width):
+        self.h_vsize=height
+        self.w_vsize=width
+        if self.p_pointer is 0:
+            self.np_pointer=1
+            self.pp_pointer=2
+        elif self.p_pointer is 1:
+            self.np_pointer=2
+            self.pp_pointer=0
+        else:
+            self.np_pointer=0
+            self.pp_pointer=1
+            
+        self.c_view=scale_image(self.l_pix[self.p_pointer],self.w_vsize,self.h_vsize)
+        self.n_view=scale_image(self.l_pix[self.np_pointer],self.w_vsize,self.h_vsize)
+        self.p_view=scale_image(self.l_pix[self.pp_pointer],self.w_vsize,self.h_vsize)
         
-        return work_image
-    
-    def showViewer(self):
-        self.show()
-        self.raise_()
+    def zoom(self,step):
+        w = self.c_view.size().width()
+        h = self.c_view.size().height()
+        w, h = w * (1 + self.zoom_step*step), h * (1 + self.zoom_step*step)
+        self.c_view = self.l_pix[self.p_pointer].scaled(w, h, 
+                                            QtCore.Qt.KeepAspectRatio, 
+                                            QtCore.Qt.FastTransformation)
+                                            
+    def rotate_left(self):
+        tags={}
+        tags['Image Orientation']=fake_Tags()
+        tags['Image Orientation'].printable="Rotated 90 CCW"
+        self.l_pix[self.p_pointer]=rotate_image(self.l_pix[self.p_pointer],tags)
+        self.c_view=scale_image(self.l_pix[self.p_pointer],self.w_vsize,self.h_vsize) # tags is a dict of objects
+            
+    def rotate_right(self):
+        tags={}
+        tags['Image Orientation']=fake_Tags()
+        tags['Image Orientation'].printable="Rotated 90 CW"
+        self.l_pix[self.p_pointer]=rotate_image(self.l_pix[self.p_pointer],tags)
+        self.c_view=scale_image(self.l_pix[self.p_pointer],self.w_vsize,self.h_vsize)
+            
 
-    def close(self):
-        self.hide()
-    
 # This is an ugly object to be able to use the image rotate function (takes a dict of objects) without modifying much more code. and allow code reuse in other places
 class fake_Tags(object):  
     def __init__(self):
         self.printable=""
 
-class ThumbListWidget(QtGui.QListWidget): # class for the display of images (inspired by a post on the PyQt mailing list http://www.riverbankcomputing.com/mailman/listinfo/pyqt by Mads Ipsen-3 Mar 25, 2009; 09:10am)
+#class attachZipFile(object):
+#    #def __ init__(self):
+#    def openZipFile(self,fileName):
+#        #some function,
+#        if not fileName.endswith('.zip'):
+#            fileName=self.getZipFileName(fileName)
+#        self.zipfile(fileName,'a',ZIP_DEFLATED)
+#    
+#    def newZipFile(self,fileName):
+#        #initialize a new zip file
+#        pass
+#    def getZipFileName(self,imagefilename):
+#        # somehow i have to generate a name for a new zipfile or determine the name for an exiting one
+#        # it is the same as for the image except for the ending (file.jpg -> file.zip)
+#        # that means that i have to pass the image file name to this method. No problem as the list of image names
+#        # is used to load images in the management dialog.
+#        fileName=imagefilename.split('.')[0]+'.zip'
+#        return fileName
+#    
+#    def getFileList(self):
+#        # returns the list of files in the zip file 
+#        pass
+#    def getZipFileChecksum(self):
+#        # returns the checksum of the zip file to be entered in the db
+#        # damit ich nicht alles auspacken muss, kann es auch sein, dass ich nur die crc's ordne und eine crc bilde, die ich dann übergebe.
+#        pass
+#    def writeZipFile(self):
+#        # writes files in list to zip file (adding) and returns checksum (siehe oben, ist das oben noch nötig?, obige methode wird wohl aufgerufen werden)
+#        # files which are not in list are no more in the zip file (get removed) empty zip files are removed
+#        # check if all files are valid (not the zip file it self nor the database)
+#        pass
+
+class ThumbListWidget(QtWidgets.QListWidget): # class for the display of images (inspired by a post on the PyQt mailing list http://www.riverbankcomputing.com/mailman/listinfo/pyqt by Mads Ipsen-3 Mar 25, 2009; 09:10am)
+    fileDropped = QtCore.Signal(list)
+    
     def __init__(self, parent=None, palette=None):
         super(ThumbListWidget, self).__init__(parent)
     
               # Setup
-        self.setViewMode(QtGui.QListView.IconMode)
-        self.setResizeMode(QtGui.QListView.Adjust)
-        self.setLayoutMode(QtGui.QListView.SinglePass)
+        self.setViewMode(QtWidgets.QListView.IconMode)
+        self.setResizeMode(QtWidgets.QListView.Adjust)
+        self.setLayoutMode(QtWidgets.QListView.SinglePass)
         self.setUniformItemSizes(0)
         self.setIconSize(QtCore.QSize(ICON_SIZE,ICON_SIZE))
-        self.setHorizontalScrollBarPolicy(1)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAcceptDrops(1)
         
     def dragEnterEvent(self, event):
@@ -1094,7 +1246,7 @@ class ThumbListWidget(QtGui.QListWidget): # class for the display of images (ins
                 if url.toString()[-3:] in IMAGE_FORMATS:
                     l.append((url.toLocalFile()))
             if len(l):
-                self.emit(QtCore.SIGNAL("dropped"), l)
+                self.fileDropped.emit(l)
             else:
                 myapp.set_statusbar(self.tr("No file in your drop has been identified as image file: Ready"))
         else:
@@ -1111,7 +1263,7 @@ class database(object):
     def get_cur(self,fileName):
         #print(fileName)
         #print(type(fileName))
-        self.con=sqlite3.connect(uniENcode(fileName))
+        self.con=sqlite3.connect(str(fileName))
         self.curs=self.con.cursor()
         #firstDia.closeDia()
         return 1
@@ -1121,64 +1273,72 @@ class database(object):
         self.curs.execute("create table Im2People(md5,pers)")
 
     def search_ImageDB(self, search_dic): # die übergabe erfolgt in einem dictionary / use a dictionary for providing the search parameters
-        sql_str=QtCore.QString("SELECT * from images WHERE ")
+        sql_str_list=list([str("SELECT * from images WHERE ")])
         i=0
-        for skey in search_dic.keys():
+        for skey in list(search_dic.keys()):
             i=i+1
             if skey is "md5": 
-                sql_str.append("md5= '")
-                sql_str.append(search_dic["md5"])
-                sql_str.append("'")
+                sql_str_list.append("md5= '")
+                sql_str_list.append(search_dic["md5"])
+                sql_str_list.append("'")
             elif skey is "year":
-                sql_str.append("year='")
-                sql_str.append(search_dic["year"])
-                sql_str.append("'")
+                sql_str_list.append("year='")
+                sql_str_list.append(search_dic["year"])
+                sql_str_list.append("'")
             elif skey is "e_name":
-                sql_str.append("event like '%")
-                sql_str.append(search_dic["e_name"])
-                sql_str.append("%'")
+                sql_str_list.append("event like '%")
+                sql_str_list.append(search_dic["e_name"])
+                sql_str_list.append("%'")
             elif skey is "e_type":
-                sql_str.append("future1 like '%")
-                sql_str.append(search_dic["e_type"])
-                sql_str.append("%'")
+                sql_str_list.append("future1 like '%")
+                sql_str_list.append(search_dic["e_type"])
+                sql_str_list.append("%'")
             elif skey is "e_loc":
-                sql_str.append("future2 like '%")
-                sql_str.append(search_dic["e_loc"])
-                sql_str.append("%'")
+                sql_str_list.append("future2 like '%")
+                sql_str_list.append(search_dic["e_loc"])
+                sql_str_list.append("%'")
             elif skey is "author":
-                sql_str.append("author like '%")
-                sql_str.append(search_dic["author"])
-                sql_str.append("%'")
+                sql_str_list.append("author like '%")
+                sql_str_list.append(search_dic["author"])
+                sql_str_list.append("%'")
             elif skey is "comment":
-                sql_str.append("comment like '%")
-                sql_str.append(search_dic["comment"])
-                sql_str.append("%'")
+                sql_str_list.append("comment like '%")
+                sql_str_list.append(search_dic["comment"])
+                sql_str_list.append("%'")
             elif skey is "pers": #mit pers muss wohl eine liste der personen in das dic eingetragen werden / remark, that there is a list of names in the dictionary at key "pers"
-                sql_str.append("md5 IN (SELECT md5 from Im2People WHERE pers='")
+                sql_str_list.append("md5 IN (SELECT md5 from Im2People WHERE pers like '%")   # using % as wild card in name window
                 for person in search_dic["pers"]:
-                    sql_str.append(person)
-                    sql_str.append("') AND md5 IN (SELECT md5 from Im2People WHERE pers='")   
+                    person=person.replace("*","%")     # allows * als wild card in names ...
+                    sql_str_list.append(person)
+                    sql_str_list.append("%')")
+                    sql_str_list.append(" AND md5 IN (SELECT md5 from Im2People WHERE pers like '%")   
 
-                sql_str.chop(51)
+                #sql_str.chop(57)  #51
+                sql_str_list=sql_str_list[0:-1] #remove the final (open) statement
 
             if i is not len(search_dic):  # TODO auch hier die elegante chop lösung von oben umsetzen/ use the "chop" solution as used above
-                sql_str.append(" AND ")
+                sql_str_list.append(" AND ")
+        sql_str=str()
+        sql_str=sql_str.join(sql_str_list)
+        
         if not search_dic:
             sql_str="SELECT * from images WHERE year IS NULL AND event IS NULL AND author IS NULL AND future1 IS NULL AND future2 IS NULL"
-        print(uniENcode(sql_str))
-        self.curs.execute(uniENcode(sql_str))
+        print(str(sql_str))
+        self.curs.execute(sql_str)
         rows=self.curs.fetchall()
         rows=sorted(rows, key=lambda fn: fn[7])
         return rows
     
     def search_distinct(self,criterion):
-        key=criterion.keys()
-        sql_str=QtCore.QString("SELECT DISTINCT ")
-        sql_str.append(key[0])
-        sql_str.append(" FROM ")
-        sql_str.append(criterion[key[0]])
-        print(sql_str)
-        self.curs.execute(uniENcode(sql_str))
+        key=list(criterion.keys())
+        sql_str=str()
+        sql_str_list=list([str("SELECT DISTINCT ")])
+        print(key[0])
+        sql_str_list.append(key[0])
+        sql_str_list.append(" FROM ")
+        sql_str_list.append(criterion[key[0]])
+        sql_str=sql_str.join(sql_str_list)
+        self.curs.execute(sql_str)
         rows=self.curs.fetchall()
         print(rows)
         outli=[]
@@ -1188,8 +1348,11 @@ class database(object):
                 outli.append(t)
             except IndexError:     # if there is only one value per tuble:
                 outli.append(row[0])
-        
+
+        while None in outli and len(outli)>1:
+            outli.remove(None)
         outli.sort()
+ 
         if outli:      # check for valid return list
             if outli[0] is not None:
                 return outli
@@ -1205,56 +1368,58 @@ class database(object):
     
     
     def update_table(self,md5,up_dic):
-        sql_str=QtCore.QString("UPDATE images SET chksum='")
-        sql_str.append(up_dic["chksum"])
-        sql_str.append("', ")
+        sql_str=str()
+        sql_str_list=list([str("UPDATE images SET chksum='")])
+        sql_str_list.append(up_dic["chksum"])
+        sql_str_list.append("', ")
         i=0
         del up_dic["chksum"]
-        for skey in up_dic.keys():
+        for skey in list(up_dic.keys()):
             i=i+1
             if skey is "year":
-                sql_str.append("year='")
-                sql_str.append(up_dic["year"])
-                sql_str.append("'")
+                sql_str_list.append("year='")
+                sql_str_list.append(up_dic["year"])
+                sql_str_list.append("'")
             elif skey is "e_name":
-                sql_str.append("event = '")
-                sql_str.append(up_dic["e_name"])
-                sql_str.append("'")
+                sql_str_list.append("event = '")
+                sql_str_list.append(up_dic["e_name"])
+                sql_str_list.append("'")
             elif skey is "e_type":
-                sql_str.append("future1 = '")
-                sql_str.append(up_dic["e_type"])
-                sql_str.append("'")
+                sql_str_list.append("future1 = '")
+                sql_str_list.append(up_dic["e_type"])
+                sql_str_list.append("'")
             elif skey is "e_loc":
-                sql_str.append("future2 = '")
-                sql_str.append(up_dic["e_loc"])
-                sql_str.append("'")
+                sql_str_list.append("future2 = '")
+                sql_str_list.append(up_dic["e_loc"])
+                sql_str_list.append("'")
             elif skey is "author":
-                sql_str.append("author = '")
-                sql_str.append(up_dic["author"])
-                sql_str.append("'")
+                sql_str_list.append("author = '")
+                sql_str_list.append(up_dic["author"])
+                sql_str_list.append("'")
             elif skey is "comment":
-                sql_str.append("comment = '")
-                sql_str.append(up_dic["comment"])
-                sql_str.append("'")
+                sql_str_list.append("comment = '")
+                sql_str_list.append(up_dic["comment"])
+                sql_str_list.append("'")
             elif skey is "people_checksum":
-                sql_str.append("people_checksum = '")
-                sql_str.append(up_dic["people_checksum"])
-                sql_str.append("'")
+                sql_str_list.append("people_checksum = '")
+                sql_str_list.append(up_dic["people_checksum"])
+                sql_str_list.append("'")
             
             if i is not len(up_dic):
-                sql_str.append(",  ")
+                sql_str_list.append(",  ")
                 
-        sql_str.append(" WHERE md5='")
-        sql_str.append(md5)
-        sql_str.append("'")
-        print(uniENcode(sql_str))
+        sql_str_list.append(" WHERE md5='")
+        sql_str_list.append(md5)
+        sql_str_list.append("'")
+        sql_str=str().join(sql_str_list)
+        print(sql_str)
         if not i is 0:
-            self.curs.execute(uniENcode(sql_str))
+            self.curs.execute(sql_str)
             self.con.commit()
 
 
     def insert_Peop(self, md5, pili):
-        self.curs.execute("SELECT pers from Im2People WHERE md5=?",(uniENcode(md5),))
+        self.curs.execute("SELECT pers from Im2People WHERE md5=?",(str(md5),))
         rows=self.curs.fetchall()
         outli=[]
 
@@ -1267,24 +1432,25 @@ class database(object):
                 outli=[]
 
         people_ck=0
-        pili=QtCore.QStringList(pili)
-        outli=QtCore.QStringList(outli)
+        #pili=StringClassList(pili) #pili should be a list anyway
+        #outli=StringClassList(outli) #outli should be a list anyway
         
         for name in pili:
-            if not outli.contains(name):
+            if name not in outli:
                 outli.append(name)
-                sql_str=QtCore.QString("INSERT INTO Im2People VALUES ('")
-                sql_str.append(md5)
-                sql_str.append("','")
-                sql_str.append(name)
-                sql_str.append("')")
-                print(uniENcode(sql_str))
-                self.curs.execute(uniENcode(sql_str))
+                sql_str_list=list([str("INSERT INTO Im2People VALUES ('")])
+                sql_str_list.append(md5)
+                sql_str_list.append("','")
+                sql_str_list.append(name)
+                sql_str_list.append("')")
+                sql_str=str().join(sql_str_list)
+                print(sql_str)
+                self.curs.execute(sql_str)
                 self.con.commit()
         
         outli.sort()
         for name in outli:
-            people_ck=adler32(name,people_ck)&0xffffffff
+            people_ck=adler32(name.encode(),people_ck)&0xffffffff
         #if people_ck==0:
         #    return([])
         #else:
@@ -1292,7 +1458,7 @@ class database(object):
         return people_ck
 
     def search_People(self,md5):
-        self.curs.execute("SELECT pers from Im2People WHERE md5=?",(uniENcode(md5),))
+        self.curs.execute("SELECT pers from Im2People WHERE md5=?",(str(md5),))
         rows=self.curs.fetchall()
         outli=[]
         for row in rows:
@@ -1347,7 +1513,7 @@ class SingleIm(object):
         self.age=""
         self.auth=""
 
-        self.comment=QtCore.QString("")
+        self.comment=str("")
         self.cksum=0
         self.people_check=0
 
@@ -1365,15 +1531,15 @@ class SingleIm(object):
 
     def addyear(self,since):
         if since:
-            since=QtCore.QString(since)
-            if since.count(QtCore.QRegExp("[0-9]{1,1}")) is 4 and since.count() is 4:
+            since=str(since)
+            if len(re.findall("[0-9]{1,1}",since)) is 4 and len(since) is 4:
                 self.age=since
-            elif since.count(QtCore.QRegExp("[0-9]{1,1}")) is 2 and since.count() is 2:
+            elif len(re.findall("[0-9]{1,1}",since)) is 2 and len(since) is 2:
                 if int(since)<65:
-                    since.insert(0,"20")
+                    since="20"+since
                     self.age=since
                 else:
-                    since.insert(0,"19")
+                    since="19"+since
                     self.age=since
 
     def addauth(self,fotogr): # badly spelled photographer
@@ -1396,94 +1562,95 @@ class SingleIm(object):
             self.pili.append(pers)
 
     def addcomment(self,com):
-        com_li=QtCore.QString(com).split(";",QtCore.QString.SkipEmptyParts)
+        com_li=str(com).split(";")#,StringClass.SkipEmptyParts)
+        com_li=[_f for _f in com_li if _f]
         for com in com_li:
-	    com=com.trimmed()
-            if not self.comment.contains(com,1):
-                self.comment.append(com)
-                self.comment.append("; ")
+            com=com.strip()
+            if com not in self.comment:    #not self.comment.contains(com,1):
+                self.comment=self.comment+com+"; "
+                #self.comment.append("; ")
                 
     def generateToolTip(self):
-        tttext=QtCore.QString(self.md5check)
-        tttext.append("<br>")
-        tttext.append(self.file_name)
-        tttext.append("<br>")
+        tttext_list=list([str(self.md5check)])
+        tttext_list.append("<br>")
+        tttext_list.append(self.file_name)
+        tttext_list.append("<br>")
         if self.age:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Year: </i>","tooltip"))
-            tttext.append(self.age)
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Year: </i>","tooltip"))
+            tttext_list.append(self.age)
 
         if self.e_loc and self.e_name and self.e_type: 
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
-            tttext.append(self.e_name)
-            tttext.append(" ")
-            tttext.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
-            tttext.append(" ")
-            tttext.append(self.e_loc)
-            tttext.append(" (")
-            tttext.append(self.e_type)
-            tttext.append(")")
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext_list.append(self.e_name)
+            tttext_list.append(" ")
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
+            tttext_list.append(" ")
+            tttext_list.append(self.e_loc)
+            tttext_list.append(" (")
+            tttext_list.append(self.e_type)
+            tttext_list.append(")")
         elif self.e_name and self.e_loc:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
-            tttext.append(self.e_name)
-            tttext.append(" ")
-            tttext.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
-            tttext.append(" ")
-            tttext.append(self.e_loc)
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext_list.append(self.e_name)
+            tttext_list.append(" ")
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
+            tttext_list.append(" ")
+            tttext_list.append(self.e_loc)
         elif self.e_name and self.e_type:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
-            tttext.append(self.e_name)
-            tttext.append(" (")
-            tttext.append(self.e_type)
-            tttext.append(")")
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext_list.append(self.e_name)
+            tttext_list.append(" (")
+            tttext_list.append(self.e_type)
+            tttext_list.append(")")
         elif self.e_type and self.e_loc:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
-            tttext.append(self.e_type)
-            tttext.append(" ")
-            tttext.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
-            tttext.append(" ")
-            tttext.append(self.e_loc)
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext_list.append(self.e_type)
+            tttext_list.append(" ")
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip"," in ","tooltip"))
+            tttext_list.append(" ")
+            tttext_list.append(self.e_loc)
         elif self.e_name:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
-            tttext.append(self.e_name)
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext_list.append(self.e_name)
         elif self.e_type:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
-            tttext.append(self.e_type)
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Event: </i>","tooltip"))
+            tttext_list.append(self.e_type)
         elif self.e_loc:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Location: </i>","tooltip"))
-            tttext.append(self.e_loc)
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Location: </i>","tooltip"))
+            tttext_list.append(self.e_loc)
     
         if self.auth:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Photographer: </i>","tooltip"))
-            tttext.append(self.auth_nick)
-            tttext.append(" ")
-            tttext.append(self.auth_nam)
-            tttext.append(" ")
-            tttext.append(self.auth_famnam)
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Photographer: </i>","tooltip"))
+            tttext_list.append(self.auth_nick)
+            tttext_list.append(" ")
+            tttext_list.append(self.auth_nam)
+            tttext_list.append(" ")
+            tttext_list.append(self.auth_famnam)
     
         if self.pili:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Whos who?: </i>","tooltip"))
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Whos who?: </i>","tooltip"))
             for name in self.pili:    
                 nameList=name.split(";")
                 nick=nameList[0]
                 nam=nameList[1]
                 famnam=nameList[2]
 
-                tttext.append("<br>&nbsp;&nbsp;&nbsp;&nbsp;")
+                tttext_list.append("<br>&nbsp;&nbsp;&nbsp;&nbsp;")
                 if nick:
-                    tttext.append(nick+" ")
+                    tttext_list.append(nick+" ")
                 if nam:
-                    tttext.append(nam+" ")
-                tttext.append(famnam)
+                    tttext_list.append(nam+" ")
+                tttext_list.append(famnam)
     
         if self.comment:
-            tttext.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Comment: </i>","tooltip"))
-            tttext.append(self.comment)
-        return tttext
+            tttext_list.append(QtCore.QCoreApplication.translate("tooltip","<br><i>Comment: </i>","tooltip"))
+            tttext_list.append(self.comment)
+        return str().join(tttext_list)
 
     def db_insert(self): # dirty implemented db access TODO: implement in database clas
-        self.cksum=adler32(uniENcode(self.md5check),self.cksum)&0xffffffff
+        self.cksum=adler32(self.md5check.encode(),self.cksum)&0xffffffff
     
-        master_db.curs.execute("insert into images (chksum, md5, sourceFileName, fileName, relPath) values (?,?,?,?,?)",(uniDEcode(self.cksum), uniDEcode(self.md5check), uniDEcode(self.file_name),uniDEcode(self.fs_filename), uniDEcode(location.fs_dir),))
+        master_db.curs.execute("insert into images (chksum, md5, sourceFileName, fileName, relPath) values (?,?,?,?,?)",(str(self.cksum), str(self.md5check), str(self.file_name),str(self.fs_filename), str(location.fs_dir),))
         master_db.con.commit()
 
     def update_DB(self):
@@ -1494,28 +1661,28 @@ class SingleIm(object):
             self.people_check=master_db.insert_Peop(self.md5check,self.pili)
             self.people_check=uniDEcode(self.people_check)
             up_dic["people_checksum"]=self.people_check
-            self.cksum=adler32(uniENcode(self.people_check),self.cksum)&0xffffffff
+            self.cksum=adler32(self.people_check.encode(),self.cksum)&0xffffffff
 
-        self.cksum=adler32(uniENcode(self.md5check),self.cksum)&0xffffffff       
+        self.cksum=adler32(self.md5check.encode(),self.cksum)&0xffffffff       
 
         if self.e_name:
             up_dic["e_name"]=self.e_name
-            self.cksum=adler32(uniENcode(self.e_name),self.cksum)&0xffffffff
+            self.cksum=adler32(self.e_name.encode(),self.cksum)&0xffffffff
         if self.e_type:
             up_dic["e_type"]=self.e_type
-            self.cksum=adler32(uniENcode(self.e_type),self.cksum)&0xffffffff
+            self.cksum=adler32(self.e_type.encode(),self.cksum)&0xffffffff
         if self.e_loc:
             up_dic["e_loc"]=self.e_loc
-            self.cksum=adler32(uniENcode(self.e_loc),self.cksum)&0xffffffff
+            self.cksum=adler32(self.e_loc.encode(),self.cksum)&0xffffffff
         if self.auth:
             up_dic["author"]=self.auth
-            self.cksum=adler32(uniENcode(self.auth),self.cksum)&0xffffffff # TODO uniENcode vs uniDEcode !
+            self.cksum=adler32(self.auth.encode(),self.cksum)&0xffffffff # TODO uniENcode vs uniDEcode !
         if self.age:
             up_dic["year"]=self.age
-            self.cksum=adler32(uniENcode(self.age),self.cksum)&0xffffffff
+            self.cksum=adler32(self.age.encode(),self.cksum)&0xffffffff
         if self.comment:
             up_dic["comment"]=self.comment
-            self.cksum=adler32(uniENcode(self.comment),self.cksum)&0xffffffff
+            self.cksum=adler32(self.comment.encode(),self.cksum)&0xffffffff
         #if self.people_check:
             
         
@@ -1524,12 +1691,17 @@ class SingleIm(object):
    
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
-    QtCore.QTextCodec.setCodecForTr(QtCore.QTextCodec.codecForName("utf8"))
+    for arg in sys.argv:
+        print(arg)
+    app = QtWidgets.QApplication(sys.argv)
+    #for arg in sys.argv:
+    #    print(arg)
+#    QtCore.QTextCodec.setCodecForTr(QtCore.QTextCodec.codecForName("utf8"))
     cwd, dummy = os.path.split(os.path.abspath(__file__))
     #cwd=os.getcwd() # uncomment this for using py2exe to get cwd in the other cases the line above serves better
     translator=QtCore.QTranslator()
-    if translator.load(os.path.join(cwd,"fotodb_tr_"+locale.getdefaultlocale()[0][0:2])):
+    locale_da=translator.load(os.path.join(cwd,"fotodb_tr_"+locale.getdefaultlocale()[0][0:2]))
+    if locale_da:
         app.installTranslator(translator)
     myapp = StartGui()
     myapp.show()
@@ -1542,5 +1714,6 @@ if __name__ == "__main__":
         sys.exit(None)
     myapp.populate_cb()
     viewer=ViewerDialog()
+#    attachman=AttachDialog()
     sys.exit(app.exec_())
     
